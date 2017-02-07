@@ -1,25 +1,22 @@
 package main;
 import com.sun.org.apache.xerces.internal.util.URI;
-
-
 public class Client implements Comparable<Client> {
-	private int id,
-	numberDates;//номер перезвона, больше 3-х в слив 
-	private String source, // откуда спам 
-	accountSpam, // ссылка на акк, с которого был спам
-	name, // имя человека, которого отспамили
-	spam, // имя спамщика
-	call, // имя звонильщика
-	trainer, // имя тренера 
-	number, // номер телефона  
-	accountClient,// ссылка на акк клиента 
-	date, //дата спама
-	address, // адресс клиента
-	comment, // комментарий
-	gym, // зал, в кот. хочет заниматься
-	courier, // имя доставщика
-	status,
-	dateCall; // статус клиента(на обзвоне, готов к пробной и т.д.)
+	private int id, numberDates;// номер перезвона, больше 3-х в слив
+	private String source, // откуда спам
+			accountSpam, // ссылка на акк, с которого был спам
+			name, // имя человека, которого отспамили
+			spam, // имя спамщика
+			call, // имя звонильщика
+			trainer, // имя тренера
+			number, // номер телефона
+			accountClient, // ссылка на акк клиента
+			date, // дата спама
+			address, // адресс клиента
+			comment, // комментарий
+			gym, // зал, в кот. хочет заниматься
+			courier, // имя доставщика
+			status, dateCall; // статус клиента(на обзвоне, готов к пробной и
+								// т.д.)
 	public int getId() {
 		return id;
 	}
@@ -110,23 +107,9 @@ public class Client implements Comparable<Client> {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public String[] toStringSpam()
-	{
-		String[] s = {
-				call,
-				courier,
-				trainer,
-				gym,
-				accountSpam,
-				name,
-				number,
-				accountClient,
-				date,
-				address,
-				comment,
-				status
-		};
-		
+	public String[] toStringSpam() {
+		String[] s = {call, courier, trainer, gym, accountSpam, name, number,
+				accountClient, date, address, comment, status};
 		return s;
 	}
 	public int getNumberDates() {
@@ -135,51 +118,46 @@ public class Client implements Comparable<Client> {
 	public void setNumberDates(int numberDates) {
 		this.numberDates = numberDates;
 	}
-	@Override 
+	@Override
 	public String toString() {
-		return getDateCall()+" " + getDate();
-		
+		return getDateCall() + " " + getDate();
 	}
-	public int compareTo(Client o) 
-	{ 
-	   /* if(this.toString().compareTo(o.toString()) > 0)
-	    {
-	    	return -1;
-	    }   
-	    else if(this.toString().compareTo(o.toString()) <  0)
-	    {
-	      return 1;
-	    }
-	    return 0;  */
-		if(this.status.equals("10")) return 99999999; else
-			if(o.status.equals("10")) return -99999999; else
+	@Override
+	public int compareTo(Client o) {
+		
+		/*if (this.toString().compareTo(o.toString()) < 0) {
+			return -1;
+		} else if (this.toString().compareTo(o.toString()) > 0) {
+			return 1;
+		}
+		return 0;*/
+		if(this.getStatus().equals("10") && this.getStatus().equals(o.getStatus()))
+			return 0;
+		else
+		if (this.getStatus().equals("10"))
+			return 999999;
+		else if (o.getStatus().equals("10"))
+			return -999999;
+		else
 		return this.toString().compareTo(o.toString());
-	  }
-
-    @Override
-    public int hashCode() {
-        return id;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Client other = (Client) obj;
-        if (this.id != other.id) {
-            return false;
-        }
-        return true;
-    }
+	}
+	@Override
+	public boolean equals(Object obj) {
+		
+		  if (obj == null) { return false; } if (getClass() != obj.getClass())
+		  { return false; }
+		 
+		final Client other = (Client) obj;
+		if (this.toString().compareTo(other.toString()) != 0) {
+			// if(this.id != other.id){
+			return false;
+		}
+		return true;
+	}
 	public String getDateCall() {
 		return dateCall;
 	}
 	public void setDateCall(String dateCall) {
 		this.dateCall = dateCall;
 	}
-	
 }

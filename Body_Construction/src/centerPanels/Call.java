@@ -358,17 +358,16 @@ public class Call extends JPanel {
 	
 	public void refreshTable() {
 		int column = table.getSelectedColumn(), row = table.getSelectedRow();
+		String queryClients, queryDates;
 		mod.getDataVector().clear();
 		try {
-			String queryClients = "SELECT * FROM clients WHERE `Call`='"
+			 queryClients = "SELECT * FROM clients WHERE `Call`='"
 					+ User.CurrentUser0 + "'";
-			String queryDates;
 			connect1 = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
 			ResultSet rsClients = SQL.doSQL(queryClients, connect1);
 			rsClients.last();
 			int count = rsClients.getRow();
-			count++;
-			clients = new Client[count - 1];
+			clients = new Client[count];
 			int i = 0;
 			if (rsClients.first())
 				do {
@@ -396,6 +395,7 @@ public class Call extends JPanel {
 						clients[i].setDateCall(rsDates.getString("Date"));
 					}
 					SQL.closeConnect(connect2);
+
 					i++;
 				} while (rsClients.next());
 			if (i == 0) {
@@ -403,10 +403,13 @@ public class Call extends JPanel {
 				mod.addRow(newRow);
 				mod.getDataVector().clear();
 			} else {
+			
 				Arrays.sort(clients);
-				for (i = 0; i < count - 1; i++) {
+				for (i = 0; i < count; i++) {
+
 					if (clients[i].getStatus().equals("10"))
 						break;
+
 					Vector<String> newRow = new Vector<String>();
 					newRow.add(clients[i].getCourier());
 					newRow.add(clients[i].getTrainer());
