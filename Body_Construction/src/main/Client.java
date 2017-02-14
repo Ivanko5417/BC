@@ -1,7 +1,9 @@
 package main;
+import javax.swing.JTable;
+
 import com.sun.org.apache.xerces.internal.util.URI;
 public class Client implements Comparable<Client> {
-	private int id, numberDates;// номер перезвона, больше 3-х в слив
+	private int id, numberDates, cost, typeOfTrain = -1, status;// номер перезвона, больше 3-х в слив
 	private String source, // откуда спам
 			accountSpam, // ссылка на акк, с которого был спам
 			name, // имя человека, которого отспамили
@@ -15,7 +17,7 @@ public class Client implements Comparable<Client> {
 			comment, // комментарий
 			gym, // зал, в кот. хочет заниматься
 			courier, // имя доставщика
-			status, dateCall; // статус клиента(на обзвоне, готов к пробной и
+			 dateCall; // статус клиента(на обзвоне, готов к пробной и
 								// т.д.)
 	public int getId() {
 		return id;
@@ -83,10 +85,10 @@ public class Client implements Comparable<Client> {
 	public void setCourier(String courier) {
 		this.courier = courier;
 	}
-	public String getStatus() {
+	public int getStatus() {
 		return status;
 	}
-	public void setStatus(String status) {
+	public void setStatus(int status) {
 		this.status = status;
 	}
 	public String getGym() {
@@ -109,7 +111,7 @@ public class Client implements Comparable<Client> {
 	}
 	public String[] toStringSpam() {
 		String[] s = {call, courier, trainer, gym, accountSpam, name, number,
-				accountClient, date, address, comment, status};
+				accountClient, date, address, comment, ""+status};
 		return s;
 	}
 	public int getNumberDates() {
@@ -124,19 +126,12 @@ public class Client implements Comparable<Client> {
 	}
 	@Override
 	public int compareTo(Client o) {
-		
-		/*if (this.toString().compareTo(o.toString()) < 0) {
-			return -1;
-		} else if (this.toString().compareTo(o.toString()) > 0) {
-			return 1;
-		}
-		return 0;*/
-		if(this.getStatus().equals("10") && this.getStatus().equals(o.getStatus()))
+		if(this.getStatus() == 10 && this.getStatus() == o.getStatus())
 			return 0;
 		else
-		if (this.getStatus().equals("10"))
+		if (this.getStatus() == 10)
 			return 999999;
-		else if (o.getStatus().equals("10"))
+		else if (o.getStatus() == 10)
 			return -999999;
 		else
 		return this.toString().compareTo(o.toString());
@@ -159,5 +154,52 @@ public class Client implements Comparable<Client> {
 	}
 	public void setDateCall(String dateCall) {
 		this.dateCall = dateCall;
+	}
+	public int getTypeOfTrain() {
+		return typeOfTrain;
+	}
+	public void setTypeOfTrain(int typeOfTrain) {
+		this.typeOfTrain = typeOfTrain;
+	}
+	public int getCost() {
+		return cost;
+	}
+	public void setCost(int cost) {
+		this.cost = cost;
+	}
+	public String get(int i)
+	{
+		switch(i)
+		{
+			case 0:
+				return getCall();
+			case 1:
+				return getCourier();
+			case 2:
+				return getTrainer();
+			case 3:
+				return getGym();
+			case 4:
+				return getAccountSpam();
+			case 5:
+				return getName();
+			case 6:
+				return getNumber();
+			case 7:
+				return getAccountClient();
+			case 8:
+				return getDate();
+			case 9:
+				return getAddress();
+			case 10:
+				return getComment();
+			case 11:
+				return getStatus()+ "";
+			case 12:
+				return getCost()+ "";
+			case 13:
+				return getTypeOfTrain() + "";
+		}
+		return "";
 	}
 }

@@ -1,20 +1,26 @@
 package centerPanels;
-import static main.Constans.PASSWORD;
-import static main.Constans.URL;
-import static main.Constans.USER_NAME;
+import static main.Constants.PASSWORD;
+import static main.Constants.URL;
+import static main.Constants.USER_NAME;
 import static panels.Common.clients;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -30,19 +36,18 @@ import javax.swing.table.DefaultTableModel;
 
 import main.Client;
 import main.DateTimePicker;
+import main.Functions;
 import main.SQL;
 import main.User;
 import panels.Common;
-public class Clients extends JPanel {
-	JFrame frameAdd = new JFrame("Добавить клиента");
+public class Clients extends Main_Center_Panel { 
+	JFrame frameAdd = new JFrame("Р”РѕР±Р°РІРёС‚СЊ РєР»РёРµРЅС‚Р°");
 	JPanel panelAdd = new JPanel();
-	private JTable table;
-	private DefaultTableModel mod;
 	private void addClient() {
 		frameAdd.setVisible(true);
 		frameAdd.setSize(400, 400);
 		panelAdd.setLayout(null);
-		JLabel lblAccountSpam = new JLabel("Ссылка на аккаунт спама");
+		JLabel lblAccountSpam = new JLabel("РЎСЃС‹Р»РєР° РЅР° Р°РєРєР°СѓРЅС‚ СЃРїР°РјР°");
 		lblAccountSpam.setLocation(10, 10);
 		lblAccountSpam.setSize(200, 30);
 		panelAdd.add(lblAccountSpam);
@@ -50,7 +55,7 @@ public class Clients extends JPanel {
 		txtAccountSpam.setLocation(10, 40);
 		txtAccountSpam.setSize(200, 20);
 		panelAdd.add(txtAccountSpam);
-		JLabel lblAccountClient = new JLabel("Ссылка на аккаунт клиента");
+		JLabel lblAccountClient = new JLabel("РЎСЃС‹Р»РєР° РЅР° Р°РєРєР°СѓРЅС‚ РєР»РёРµРЅС‚Р°");
 		lblAccountClient.setLocation(10, 60);
 		lblAccountClient.setSize(200, 30);
 		panelAdd.add(lblAccountClient);
@@ -58,7 +63,7 @@ public class Clients extends JPanel {
 		txtAccountClient.setLocation(10, 90);
 		txtAccountClient.setSize(200, 20);
 		panelAdd.add(txtAccountClient);
-		JLabel lblNumber = new JLabel("Номер телефона");
+		JLabel lblNumber = new JLabel("РќРѕРјРµСЂ С‚РµР»РµС„РѕРЅР°");
 		lblNumber.setLocation(10, 110);
 		lblNumber.setSize(200, 30);
 		panelAdd.add(lblNumber);
@@ -66,7 +71,7 @@ public class Clients extends JPanel {
 		txtNumber.setLocation(10, 140);
 		txtNumber.setSize(200, 20);
 		panelAdd.add(txtNumber);
-		JLabel lblName = new JLabel("Имя");
+		JLabel lblName = new JLabel("РРјСЏ");
 		lblName.setLocation(10, 160);
 		lblName.setSize(200, 30);
 		panelAdd.add(lblName);
@@ -74,7 +79,7 @@ public class Clients extends JPanel {
 		txtName.setLocation(10, 190);
 		txtName.setSize(200, 20);
 		panelAdd.add(txtName);
-		JLabel lblDate = new JLabel("Дата первого звонка");
+		JLabel lblDate = new JLabel("Р”Р°С‚Р° РїРµСЂРІРѕРіРѕ Р·РІРѕРЅРєР°");
 		lblDate.setLocation(10, 210);
 		lblDate.setSize(200, 30);
 		panelAdd.add(lblDate);
@@ -86,7 +91,7 @@ public class Clients extends JPanel {
 		dateTimePicker.setDate(Calendar.getInstance().getTime());
 		dateTimePicker.setBounds(10, 240, 200, 26);
 		panelAdd.add(dateTimePicker);
-		JLabel lblComment = new JLabel("Комментарий");
+		JLabel lblComment = new JLabel("РљРѕРјРјРµРЅС‚Р°СЂРёР№");
 		lblComment.setLocation(10, 260);
 		lblComment.setSize(200, 30);
 		panelAdd.add(lblComment);
@@ -100,7 +105,7 @@ public class Clients extends JPanel {
 		scrollComment.setLocation(10, 290);
 		scrollComment.setSize(200, 40);
 		panelAdd.add(scrollComment);
-		JButton btnOk = new JButton("ОК");
+		JButton btnOk = new JButton("РћРљ");
 		btnOk.setLocation(10, 330);
 		btnOk.setSize(50, 20);
 		btnOk.addActionListener(new ActionListener() {
@@ -111,7 +116,7 @@ public class Clients extends JPanel {
 					Connection connect = null;
 					connect = DriverManager.getConnection(URL, USER_NAME,
 							PASSWORD);
-					String query = "INSERT INTO clients (Spam, Vk_Spam, Name_Client, Number, Vk_Client, Date, Сomment, Status)"
+					String query = "INSERT INTO `clients` (`Spam`, `Vk_Spam`, `Name_Client`, `Number`, `Vk_Client`, `Date`, `Note`, `Status`)"
 							+ " values('" + User.CurrentUser0 + "', '"
 							+ txtAccountSpam.getText() + "', " + "'"
 							+ txtName.getText() + "', '" + txtNumber.getText()
@@ -126,14 +131,14 @@ public class Clients extends JPanel {
 					while (rs.next()) {
 						id = rs.getInt("id");
 					}
-					query = "INSERT INTO dates (Client_id, Type, Date, State) "
+					query = "INSERT INTO `dates` (`Client_id`, `Type`, `Date`, `State`) "
 							+ "values(" + id + ",0,'"
 							+ Common.getDate(dateTimePicker.getDate())
 							+ "' ,0)";
 					SQL.doSQLWithoutResult(query, connect);
 					SQL.closeConnect(connect);
 				} catch (Exception e) {
-					System.out.println("Проблема с добавлением записи в БД.\n"
+					System.out.println("РџСЂРѕР±Р»РµРјР° СЃ РґРѕР±Р°РІР»РµРЅРёРµРј Р·Р°РїРёСЃРё РІ Р‘Р”.\n"
 							+ e.getMessage());
 				}
 				frameAdd.setVisible(false);
@@ -148,8 +153,8 @@ public class Clients extends JPanel {
 		mod.getDataVector().clear();
 		try {
 			Connection connect;
-			connect = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-			String query = "SELECT * FROM clients WHERE Spam='"
+			connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+			String query = "SELECT * FROM `clients` WHERE `Spam`='"
 					+ User.CurrentUser0 + "'";
 			ResultSet rs = SQL.doSQL(query, connect);
 			rs.last();
@@ -157,8 +162,12 @@ public class Clients extends JPanel {
 			clients = new Client[count];
 			rs.first();
 			int i = 0;
+			if(count > 0)
 			do {
 					clients[i] = new Client();
+					clients[i].setSource(rs.getString("From"));
+					clients[i].setSpam(rs.getString("Spam"));
+					System.out.println(clients[i].getSpam());
 					clients[i].setCall(rs.getString("Call"));
 					clients[i].setCourier(rs.getString("Courier"));
 					clients[i].setTrainer(rs.getString("Trainer"));
@@ -169,10 +178,10 @@ public class Clients extends JPanel {
 					clients[i].setAccountClient(rs.getString("Vk_Client"));
 					clients[i].setDate(rs.getString("Date"));
 					clients[i].setAddress(rs.getString("Address"));
-					clients[i].setComment(rs.getString("Сomment"));
-					clients[i].setStatus("" + rs.getInt("Status"));
-				
-				// table.setSelectionMode(SelectionMode.MULTIPLE);
+					clients[i].setComment(rs.getString("Comment"));
+					clients[i].setStatus(rs.getInt("Status"));
+					clients[i].setCost(rs.getInt("Cost"));
+					clients[i].setTypeOfTrain(rs.getInt("TypeOfTrain"));
 				i++;
 			} while (rs.next());
 			if (i == 0) {
@@ -185,7 +194,7 @@ public class Clients extends JPanel {
 				Arrays.sort(clients);
 				for( i = 0; i < count; i++)
 				{
-					if(clients[i].getStatus().equals("10"))
+					if(clients[i].getStatus() == 10)
 						break;
 
 					Vector<String> newRow = new Vector<String>();
@@ -200,14 +209,20 @@ public class Clients extends JPanel {
 					newRow.add(clients[i].getDate());
 					newRow.add(clients[i].getAddress());
 					newRow.add(clients[i].getComment());
-					newRow.add(clients[i].getStatus());
+					newRow.add(Functions.getStatus(clients[i].getStatus()));
+					if(clients[i].getCost() != -1)
+					{
+						newRow.add(""+clients[i].getCost());
+						newRow.add(Functions.getTypeOfTrain(clients[i].getTypeOfTrain()));
+					}
 					mod.addRow(newRow);
 				}
 			}
 			SQL.closeConnect(connect);
-		} catch (Exception e) {
-			System.out.println("Проблема с БД. Clients.java");
+		} catch (SQLException e) {
+			System.out.println("РџСЂРѕР±Р»РµРјР° СЃ Р‘Р”. Clients.java");
 			System.out.println(e.getMessage());
+			System.out.println(e.getStackTrace());
 		}
 		if (column > -1 && row > -1) {
 			table.setColumnSelectionInterval(column, column);
@@ -215,35 +230,8 @@ public class Clients extends JPanel {
 		}
 	}
 	public Clients() {
-		setBackground(Color.WHITE);
-		setLayout(new BorderLayout());
-		JButton btnAdd = new JButton("Добавить клиента");
-		Vector<String> headerVect = new Vector<String>();
-		headerVect.add("Звонильщик");
-		headerVect.add("Доставщик");
-		headerVect.add("Тренер");
-		headerVect.add("Зал");
-		headerVect.add("Вк Спамщика");
-		headerVect.add("Имя");
-		headerVect.add("Номер");
-		headerVect.add("Вк клиента");
-		headerVect.add("Дата");
-		headerVect.add("Адресс");
-		headerVect.add("Комментарий");
-		headerVect.add("Статус");
-		table = new JTable() {
-			@Override
-			public boolean isCellEditable(int row, int column) {
-				return false;
-			}
-		};
-		mod = new DefaultTableModel(headerVect, 0);
-		table.setModel(mod);
-		table.setSelectionMode(0);
-		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setVerticalScrollBarPolicy(
-				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-		add(scrollPane, BorderLayout.CENTER);
+
+		JButton btnAdd = new JButton("Р”РѕР±Р°РІРёС‚СЊ РєР»РёРµРЅС‚Р°");
 		btnAdd.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {

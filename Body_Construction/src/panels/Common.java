@@ -1,10 +1,10 @@
 package panels;
-import static main.Constans.CALL;
-import static main.Constans.PASSWORD;
-import static main.Constans.SPAM;
-import static main.Constans.TRAINER;
-import static main.Constans.URL;
-import static main.Constans.USER_NAME;
+import static main.Constants.CALL;
+import static main.Constants.PASSWORD;
+import static main.Constants.SPAM;
+import static main.Constants.TRAINER;
+import static main.Constants.URL;
+import static main.Constants.USER_NAME;
 import static panels.Authorization.mainPanel;
 import static panels.Common.clients;
 
@@ -18,12 +18,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import main.Client;
+import main.Main;
 import main.SQL;
 import main.User;
 import centerPanels.Call;
 import centerPanels.Clients;
 import centerPanels.FreeCall;
 import centerPanels.Schedule;
+import centerPanels.Settings;
 import centerPanels.Sink;
 import centerPanels.Start_Center_Bar;
 import centerPanels.Trainer;
@@ -38,6 +40,7 @@ public class Common extends JPanel {
 	static public FreeCall callfreePanel;
 	static public Call callPanel;
 	static public Sink sinkPanel;
+	static public Settings settingsPanel;
 	static public Client[] clients = null;
 	static void setPanels(JPanel leftPanel, JPanel centerPanel) {
 		mainPanel.removeAll();
@@ -45,6 +48,20 @@ public class Common extends JPanel {
 		mainPanel.add(centerPanel, BorderLayout.CENTER);
 		mainPanel.revalidate();
 		mainPanel.repaint();
+	}
+	static void setCommonPanels(JPanel centerPanel)
+	{
+		switch (User.Type) {
+			case 0 :
+				setPanels(leftPanelSpam, centerPanel);
+				break;
+			case 1 :
+				setPanels(leftPanelCall, centerPanel);
+				break;
+			case 3 :
+				setPanels(leftPanelTrainer, centerPanel);
+				break;
+		}
 	}
 	static void setSchedule() {
 		setPanels(leftPanelTrainer, schedulePanel);
@@ -61,20 +78,12 @@ public class Common extends JPanel {
 	static void setTrainer() {
 		setPanels(leftPanelTrainer, clientsTrainerPanel);
 	}
+	static void setSettings()
+	{
+		setCommonPanels(settingsPanel);
+	}
 	static void setSink() {
-		switch (User.Type) {
-			case 0 :
-				setPanels(leftPanelSpam, sinkPanel);
-				break;
-			case 1 :
-				setPanels(leftPanelCall, sinkPanel);
-				break;
-			case 3 :
-				setPanels(leftPanelTrainer, sinkPanel);
-				break;
-			default :
-				break;
-		}
+		setCommonPanels(sinkPanel);
 	}
 	static public String getDate(Date d) {
 		return "" + (2000 + d.getYear() % 100) + "." + (d.getMonth() + 1) + "."
@@ -113,7 +122,6 @@ public class Common extends JPanel {
 		if (comment != null) {
 			String query = "UPDATE `clients` SET `Status` = 10, `Ñomment` = '"
 					+ comment + "' WHERE `id` = " + id + "";
-			System.out.println(query);
 			SQL.doSQLWithoutResult(query, connect);
 			SQL.closeConnect(connect);
 		}
@@ -129,6 +137,7 @@ public class Common extends JPanel {
 		callfreePanel = new FreeCall();
 		callPanel = new Call();
 		clientsTrainerPanel = new Trainer();
+		settingsPanel = new Settings();
 		sinkPanel = new Sink();
 		switch (type) {
 			case SPAM :

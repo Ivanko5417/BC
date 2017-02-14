@@ -1,7 +1,7 @@
 package panels;
 
 
-import static main.Constans.*;
+import static main.Constants.*;
 
 import java.awt.Font;
 import java.awt.event.ActionEvent;

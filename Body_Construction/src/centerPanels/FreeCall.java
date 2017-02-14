@@ -1,8 +1,9 @@
 package centerPanels;
 
-import static main.Constans.PASSWORD;
-import static main.Constans.URL;
-import static main.Constans.USER_NAME;
+import static main.Constants.PASSWORD;
+import static main.Constants.URL;
+import static main.Constants.USER_NAME;
+import static panels.Common.clients;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -22,12 +23,11 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.table.DefaultTableModel;
 
 import main.Client;
+import main.Functions;
 import main.SQL;
 import main.User;
-public class FreeCall extends JPanel {
+public class FreeCall  extends Main_Center_Panel  {
 	Client[] clients;
-	private JTable table;
-	private DefaultTableModel mod;
 	private Connection connect = null;
 	public  void refreshTable()
 	{
@@ -37,7 +37,7 @@ public class FreeCall extends JPanel {
 		try
 		{
 			String query = "SELECT * FROM `clients` WHERE `Call`=''";
-			connect = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+			connect = DriverManager.getConnection(URL,main.Constants.connInfo);
 			ResultSet rs = SQL.doSQL(query, connect);
 			
 			rs.last();
@@ -60,7 +60,7 @@ public class FreeCall extends JPanel {
 				clients[i].setDate(rs.getString("Date"));
 				clients[i].setAddress(rs.getString("Address"));
 				clients[i].setComment(rs.getString("Сomment"));
-				clients[i].setStatus(""+rs.getInt("Status"));
+				clients[i].setStatus(rs.getInt("Status"));
 				Vector<String> newRow = new Vector<String>();
 				newRow.add(clients[i].getCourier());
 				newRow.add(clients[i].getTrainer());
@@ -72,7 +72,7 @@ public class FreeCall extends JPanel {
 				newRow.add(clients[i].getDate());
 				newRow.add(clients[i].getAddress());
 				newRow.add(clients[i].getComment());
-				newRow.add(clients[i].getStatus());
+				newRow.add(Functions.getStatus(clients[i].getStatus()));
 				mod.addRow(newRow);
 				i++;
 			}while(rs.next());
@@ -98,32 +98,6 @@ public class FreeCall extends JPanel {
 	}
 	public FreeCall()
 	{
-		setBackground(Color.WHITE);
-		setLayout(new BorderLayout());
-		JButton btnAdd = new JButton("Добавить клиента");
-		Vector<String> headerVect = new Vector<String>();
-	      headerVect.add("Доставщик");
-	      headerVect.add("Тренер");
-	      headerVect.add("Зал");
-	      headerVect.add("Вк Спамщика");
-	      headerVect.add("Имя");
-	      headerVect.add("Номер");
-	      headerVect.add("Вк клиента");
-	      headerVect.add("Дата");
-	      headerVect.add("Адресс");
-	      headerVect.add("Комментарий");
-	      headerVect.add("Статус");
-	      table = new JTable()
-	      {
-	    	@Override
-	    	public boolean isCellEditable(int row, int column) {
-	    		
-	    		return false;
-	    	}
-	      };
-	      mod = new DefaultTableModel(headerVect, 0);
-	      table.setModel(mod);
-	      table.setSelectionMode(0);
 	      table.addMouseListener(new MouseListener() {
 				@Override
 				public void mouseReleased(MouseEvent arg0) {
@@ -144,7 +118,7 @@ public class FreeCall extends JPanel {
 						
 						Connection connect = null;
 						try {
-							connect = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
 						} catch (SQLException e1) {
 						}
 						int id = clients[table.getSelectedRow()].getId();
@@ -158,9 +132,6 @@ public class FreeCall extends JPanel {
 					}
 				}
 			});
-       JScrollPane scrollPane = new JScrollPane(table);
-       scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-       add(scrollPane, BorderLayout.CENTER);
 		
 	}
 }

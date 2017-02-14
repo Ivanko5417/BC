@@ -1,5 +1,7 @@
 package main;
 
+import static main.Constants.PASSWORD;
+import static main.Constants.USER_NAME;
 import static panels.Authorization.mainPanel;
 import static panels.Authorization.stream;
 import static panels.Common.callPanel;
@@ -12,8 +14,7 @@ import static panels.Common.leftPanelSpam;
 import static panels.Common.leftPanelTrainer;
 import static panels.Common.schedulePanel;
 import static panels.Common.sinkPanel;
-
-
+import static panels.Common.settingsPanel;
 
 import javax.swing.JFrame;
 
@@ -25,6 +26,11 @@ public class Main {
 	public static Authorization panelAuth = null;
 	public static void main(String[] args) {
 		startAauth();
+		Constants.connInfo.setProperty("user", USER_NAME);
+		Constants.connInfo.setProperty("password", PASSWORD);
+		Constants.connInfo.setProperty("useUnicode","true"); 
+		Constants.connInfo.setProperty("characterEncoding","cp1251");
+		
 	}
 	
 	public static void startAauth()
@@ -62,6 +68,7 @@ public class Main {
 		leftPanelTrainer = null;
 		clientsTrainerPanel = null;
 		sinkPanel = null;
+		settingsPanel = null;
 		User.CurrentUser = "";
 		User.CurrentUser0 = "";
 		System.gc();

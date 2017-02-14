@@ -34,6 +34,7 @@ public class Left_Bar_Call extends Left_Bar_Main{
 		btnCall.setForeground(new Color(169, 13, 221));
 		add(btnFreeCall);
 		add(btnCall);
+		add(btnSettings);
 		add(btnSink);
 		add(btnExit);
 	}

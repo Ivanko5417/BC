@@ -20,8 +20,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class Left_Bar_Main extends JPanel {
-	public JButton btnExit = new JButton("Выход");
+	public JButton btnSettings = new JButton("Настройки");
 	public JButton btnSink = new JButton("Слив");
+	public JButton btnExit = new JButton("Выход");
 	
 	
 	@Override
@@ -41,6 +42,14 @@ public class Left_Bar_Main extends JPanel {
 		lblMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
 		add(lblMenu);
 		add(javax.swing.Box.createRigidArea(new Dimension(0, 25)));
+		btnSettings.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Common.setSettings();
+			}
+		});
+		btnSettings.setAlignmentX(Component.CENTER_ALIGNMENT);
+		btnSettings.setForeground(Color.DARK_GRAY);
 		btnSink.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {

@@ -1,6 +1,6 @@
 package main;
 
-import static main.Constans.*;
+import static main.Constants.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

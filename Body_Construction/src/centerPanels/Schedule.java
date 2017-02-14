@@ -1,7 +1,7 @@
 package centerPanels;
-import static main.Constans.PASSWORD;
-import static main.Constans.URL;
-import static main.Constans.USER_NAME;
+import static main.Constants.PASSWORD;
+import static main.Constants.URL;
+import static main.Constants.USER_NAME;
 import static panels.Common.clients;
 
 import java.awt.BorderLayout;
@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -21,17 +22,19 @@ import javax.swing.table.DefaultTableModel;
 
 import panels.Common;
 import main.Client;
+import main.Functions;
 import main.SQL;
 import main.User;
-public class Schedule extends JPanel {
+public class Schedule  extends Main_Center_Panel {
 	private JTable table;
 	private DefaultTableModel mod;
+	Client[] clients = null;
 	public void refreshTable() {
 		int column = table.getSelectedColumn(), row = table.getSelectedRow();
 		mod.getDataVector().clear();
 		try {
 			Connection connect, connect2;
-			connect = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+			connect = DriverManager.getConnection(URL,main.Constants.connInfo);
 			String query = "SELECT * FROM `clients` WHERE Trainer='"
 					+ User.CurrentUser0 + "'";
 			ResultSet rsClients = SQL.doSQL(query, connect);
@@ -43,8 +46,7 @@ public class Schedule extends JPanel {
 			do {
 				String queryDates = "SELECT * FROM `dates` WHERE `Client_id`="
 						+ rsClients.getInt("id") + " ORDER BY `Date`";
-				connect2 = DriverManager
-						.getConnection(URL, USER_NAME, PASSWORD);
+				connect2 = DriverManager.getConnection(URL,main.Constants.connInfo);
 				ResultSet rsDates = SQL.doSQL(queryDates, connect2);
 				if (rsDates.last()) {
 					String dateString0 = rsDates.getString("Date");
@@ -65,7 +67,7 @@ public class Schedule extends JPanel {
 						clients[i].setDate(rsClients.getString("Date"));
 						clients[i].setAddress(rsClients.getString("Address"));
 						clients[i].setComment(rsClients.getString("Сomment"));
-						clients[i].setStatus("" + rsClients.getInt("Status"));
+						clients[i].setStatus(rsClients.getInt("Status"));
 						Vector<String> newRow = new Vector<String>();
 						newRow.add(clients[i].getTrainer());
 						newRow.add(clients[i].getGym());
@@ -76,14 +78,13 @@ public class Schedule extends JPanel {
 						newRow.add(Common.getTime(dateString0));
 						newRow.add(clients[i].getAddress());
 						newRow.add(clients[i].getComment());
-						newRow.add(clients[i].getStatus());
+						newRow.add(Functions.getStatus(clients[i].getStatus()));
 						table.getSelectedRow();
 						table.getSelectedColumn();
 						mod.addRow(newRow);
 					}
 				}
 				SQL.closeConnect(connect2);
-				// table.setSelectionMode(SelectionMode.MULTIPLE);
 				i++;
 			} while (rsClients.next());
 			if (i == 0) {
@@ -100,29 +101,6 @@ public class Schedule extends JPanel {
 		}
 	}
 	public Schedule() {
-		setLayout(new BorderLayout());
-		Vector<String> headerVect = new Vector<String>();
-		headerVect.add("Тренер");
-		headerVect.add("Зал");
-		headerVect.add("Вк Спамщика");
-		headerVect.add("Имя");
-		headerVect.add("Номер");
-		headerVect.add("Вк клиента");
-		headerVect.add("Время");
-		headerVect.add("Адресс");
-		headerVect.add("Комментарий");
-		table = new JTable() {
-			@Override
-			public boolean isCellEditable(int row, int column) {
-				return false;
-			}
-		};
-		table.setSelectionMode(0);
-		mod = new DefaultTableModel(headerVect, 0);
-		table.setModel(mod);
-		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane
-				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-		add(scrollPane);
+		
 	}
 }
