@@ -26,6 +26,8 @@ public class Main {
 	public static Authorization panelAuth = null;
 	public static void main(String[] args) {
 		startAauth();
+		Constants.connInfo.setProperty("useSSL","false"); 
+		Constants.connInfo.setProperty("verifyServerCertificate","false");
 		Constants.connInfo.setProperty("user", USER_NAME);
 		Constants.connInfo.setProperty("password", PASSWORD);
 		Constants.connInfo.setProperty("useUnicode","true"); 
@@ -51,8 +53,6 @@ public class Main {
 	
 	public static void exit()
 	{
-
-		stream.mainTm.stop();
 		stream = null;
 		leftPanelCall = null;
 		leftPanelSpam = null;

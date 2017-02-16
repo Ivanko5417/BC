@@ -15,12 +15,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
 
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.table.DefaultTableModel;
 
 import main.Client;
 import main.Functions;
@@ -59,7 +53,7 @@ public class FreeCall  extends Main_Center_Panel  {
 				clients[i].setAccountClient(rs.getString("Vk_Client"));
 				clients[i].setDate(rs.getString("Date"));
 				clients[i].setAddress(rs.getString("Address"));
-				clients[i].setComment(rs.getString("Ñomment"));
+				clients[i].setComment(rs.getString("Comment"));
 				clients[i].setStatus(rs.getInt("Status"));
 				Vector<String> newRow = new Vector<String>();
 				newRow.add(clients[i].getCourier());
@@ -115,20 +109,26 @@ public class FreeCall  extends Main_Center_Panel  {
 				public void mouseClicked(MouseEvent e) {
 					if(e.getClickCount() >= 2 && e.getClickCount()%2==0)
 					{ 
-						
-						Connection connect = null;
-						try {
-							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
-						} catch (SQLException e1) {
-						}
-						int id = clients[table.getSelectedRow()].getId();
-						String query = "UPDATE clients SET `Call` = '"+User.CurrentUser0+"', `Status`= 1 WHERE `id`="
-					+id+";";
-						SQL.doSQLWithoutResult(query, connect);
-						refreshTable();
-						query = "UPDATE `dates` SET `Call`='"+User.CurrentUser0+"' WHERE `Client_id`="+id+"";
-						SQL.doSQLWithoutResult(query, connect);
-						SQL.closeConnect(connect);
+						new Thread()
+						{
+							public void run() 
+							{
+
+								Connection connect = null;
+								try {
+									connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+								} catch (SQLException e1) {
+								}
+								int id = clients[table.getSelectedRow()].getId();
+								String query = "UPDATE clients SET `Call` = '"+User.CurrentUser0+"', `Status`= 1 WHERE `id`="
+							+id+";";
+								SQL.doSQLWithoutResult(query, connect);
+								refreshTable();
+								query = "UPDATE `dates` SET `Call`='"+User.CurrentUser0+"' WHERE `Client_id`="+id+"";
+								SQL.doSQLWithoutResult(query, connect);
+								SQL.closeConnect(connect);
+							};
+						}.start();
 					}
 				}
 			});

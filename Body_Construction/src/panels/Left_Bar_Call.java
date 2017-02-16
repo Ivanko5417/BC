@@ -7,6 +7,10 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 
+import main.Main;
+import main.MainThread;
+import main.User;
+
 public class Left_Bar_Call extends Left_Bar_Main{
 	public JButton btnFreeCall = null;
 	public JButton btnCall = null;

@@ -54,7 +54,6 @@ public class Call  extends Main_Center_Panel {
 	private Connection connect1 = null;
 	private Connection connect2 = null;
 	private int selectedClient = -1, length = 0;
-	private JScrollPane scrollPane = null;
 	private void initAddCall() {
 		frameAdd.setSize(400, 400);
 		panelAdd.setLayout(null);
@@ -111,37 +110,45 @@ public class Call  extends Main_Center_Panel {
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				try {
-					Date date = Calendar.getInstance().getTime();
-					Connection connect = null;
 
-					connect = DriverManager.getConnection(URL,main.Constants.connInfo);
-					String query = "INSERT INTO `clients` (From, Name_Client, Number,Call, Date, Сomment, Status)"
-							+ " values('"+cmFrom.getSelectedItem()+"'," + "'"
-							+ txtName.getText() + "', '" + txtNumber.getText()
-							+ "','"+User.CurrentUser0+"', "
-							+ " '20" + (date.getYear() % 100) + "."
-							+ (date.getMonth() + 1) + "." + date.getDate()
-							+ "', " + "'" + txtComment.getText() + "', 1)";
-					SQL.doSQLWithoutResult(query, connect);
-					query = "SELECT * FROM `clients` WHERE Number='"
-							+ txtNumber.getText() + "';";
-					ResultSet rs = SQL.doSQL(query, connect);
-					int id = -1;
-					while (rs.next()) {
-						id = rs.getInt("id");
-					}
-					query = "INSERT INTO dates (Client_id, Value, Date, State) "
-							+ "values(" + id + ",'Зв1','" + txtDate.getText()
-							+ "' ,0)";
-					SQL.doSQLWithoutResult(query, connect);
-					SQL.closeConnect(connect);
-					refreshTable();
-				} catch (Exception e) {
-					System.out.println("Проблема с добавлением записи в БД.\n"
-							+ e.getMessage());
-				}
-				frameAdd.setVisible(false);
+				new Thread()
+				{
+					public void run() 
+					{
+						frameAdd.setVisible(false);
+						try {
+							Date date = Calendar.getInstance().getTime();
+							Connection connect = null;
+
+							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+							String query = "INSERT INTO `clients` (From, Name_Client, Number,Call, Date, Comment, Status)"
+									+ " values('"+cmFrom.getSelectedItem()+"'," + "'"
+									+ txtName.getText() + "', '" + txtNumber.getText()
+									+ "','"+User.CurrentUser0+"', "
+									+ " '20" + (date.getYear() % 100) + "."
+									+ (date.getMonth() + 1) + "." + date.getDate()
+									+ "', " + "'" + txtComment.getText() + "', 1)";
+							SQL.doSQLWithoutResult(query, connect);
+							query = "SELECT * FROM `clients` WHERE Number='"
+									+ txtNumber.getText() + "';";
+							ResultSet rs = SQL.doSQL(query, connect);
+							int id = -1;
+							while (rs.next()) {
+								id = rs.getInt("id");
+							}
+							query = "INSERT INTO dates (Client_id, Value, Date, State) "
+									+ "values(" + id + ",'Зв1','" + txtDate.getText()
+									+ "' ,0)";
+							SQL.doSQLWithoutResult(query, connect);
+							SQL.closeConnect(connect);
+							refreshTable();
+						} catch (Exception e) {
+							System.out.println("Проблема с добавлением записи в БД.\n"
+									+ e.getMessage());
+						}
+					};
+				}.start();
+				
 			}
 		});
 		panelAdd.add(btnOk);
@@ -166,24 +173,31 @@ public class Call  extends Main_Center_Panel {
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				clients[selectedClient].setNumberDates(
-						clients[selectedClient].getNumberDates() + 1);
-				Connection connect = null;
-				try {
+				new Thread()
+				{
+					public void run() 
+					{
+						clients[selectedClient].setNumberDates(
+								clients[selectedClient].getNumberDates() + 1);
+						Connection connect = null;
+						try {
 
-					connect = DriverManager.getConnection(URL,main.Constants.connInfo);
-				} catch (SQLException e1) {
-					System.out.println("Проблема с БД. Call.Java, nextCall");
-				}
-				int id = clients[selectedClient].getId();
-				String dateQuery = "INSERT INTO `dates` (`Client_id`, `Call`,`Type`,`Number`, `Date`, `State`)"
-						+ "VALUES (" + id + ", '" + User.CurrentUser0 + "', "
-						+ "0" + ", " + clients[selectedClient].getNumberDates()
-						+ ", '" + Common.getDate(dateTimePicker.getDate())
-						+ "', '0') ";
-				SQL.doSQLWithoutResult(dateQuery, connect);
-				SQL.closeConnect(connect);
-				frameNextCall.setVisible(false);
+							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+						} catch (SQLException e1) {
+							System.out.println("Проблема с БД. Call.Java, nextCall");
+						}
+						int id = clients[selectedClient].getId();
+						String dateQuery = "INSERT INTO `dates` (`Client_id`, `Call`,`Type`,`Number`, `Date`, `State`)"
+								+ "VALUES (" + id + ", '" + User.CurrentUser0 + "', "
+								+ "0" + ", " + clients[selectedClient].getNumberDates()
+								+ ", '" + Common.getDate(dateTimePicker.getDate())
+								+ "', '0') ";
+						SQL.doSQLWithoutResult(dateQuery, connect);
+						SQL.closeConnect(connect);
+						frameNextCall.setVisible(false);
+					};
+				}.start();
+				
 			}
 		});
 		panelNextCall.add(lblDateCall);
@@ -252,27 +266,35 @@ public class Call  extends Main_Center_Panel {
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				int id = clients[selectedClient].getId();
-				Connection connect = null;
-				try {
+				new Thread()
+				{
+					public void run() 
+					{
+						frameAddTrainer.setVisible(false);
+						int id = clients[selectedClient].getId();
+						Connection connect = null;
+						try {
 
-					connect = DriverManager.getConnection(URL,main.Constants.connInfo);
-				} catch (SQLException e) {
-					System.out.println("Проблема БД. Call.java, Тренер");
-					System.out.println(e.getMessage());
-				}
-				String query = "UPDATE `clients` SET `Gym` = '"
-						+ cmGym.getSelectedItem() + "', `Trainer` = '"
-						+ cmTrainer.getSelectedItem()
-						+ "', `Status` = 3 WHERE `id` = " + id;
-				SQL.doSQLWithoutResult(query, connect);
-				query = "INSERT INTO `dates` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
-						+ id + ", '" + cmTrainer.getSelectedItem() + "','2', '"
-						+ Common.getDateTime(dateTimePicker.getDate())
-						+ "', 0)";
-				SQL.doSQLWithoutResult(query, connect);
-				SQL.closeConnect(connect);
-				frameAddTrainer.setVisible(false);
+							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+						} catch (SQLException e) {
+							System.out.println("Проблема БД. Call.java, Тренер");
+							System.out.println(e.getMessage());
+						}
+						String query = "UPDATE `clients` SET `Gym` = '"
+								+ cmGym.getSelectedItem() + "', `Trainer` = '"
+								+ cmTrainer.getSelectedItem()
+								+ "', `Status` = 3 WHERE `id` = " + id;
+						SQL.doSQLWithoutResult(query, connect);
+						query = "INSERT INTO `dates` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
+								+ id + ", '" + cmTrainer.getSelectedItem() + "','2', '"
+								+ Common.getDateTime(dateTimePicker.getDate())
+								+ "', 0)";
+						SQL.doSQLWithoutResult(query, connect);
+						SQL.closeConnect(connect);
+					};
+				}.start();
+				
+				
 			}
 		});
 		panelAddTrainer.add(lblDate);
@@ -318,14 +340,13 @@ public class Call  extends Main_Center_Panel {
 			rsClients.last();
 			int count = rsClients.getRow();
 			clients = new Client[count];
+			System.out.println(count);
 			int i = 0;
+			ResultSet rsDates;
+			connect2 = DriverManager.getConnection(URL,main.Constants.connInfo);
 			if (rsClients.first())
 				do {
-					queryDates = "SELECT * FROM `dates` WHERE `Client_id`="
-							+ rsClients.getInt("id") + "  ORDER BY `Date`";
-
-					connect2 = DriverManager.getConnection(URL,main.Constants.connInfo);
-					ResultSet rsDates = SQL.doSQL(queryDates, connect2);
+					
 					clients[i] = new Client();
 					clients[i].setId(rsClients.getInt("id"));
 					clients[i].setCourier(rsClients.getString("Courier"));
@@ -340,19 +361,25 @@ public class Call  extends Main_Center_Panel {
 					clients[i].setAddress(rsClients.getString("Address"));
 					clients[i].setComment(rsClients.getString("Comment"));
 					clients[i].setStatus(rsClients.getInt("Status"));
+					queryDates = "SELECT * FROM `dates` WHERE `Client_id`="
+							+ rsClients.getInt("id") + "  ORDER BY `Date`";
+					rsDates = SQL.doSQL(queryDates, connect2);
+					System.out.println("1");
 					if (rsDates.last()) {
 						clients[i].setNumberDates(rsDates.getInt("Number"));
 						clients[i].setDateCall(rsDates.getString("Date"));
 					}
-					SQL.closeConnect(connect2);
 					i++;
 				} while (rsClients.next());
+
+			SQL.closeConnect(connect2);
 			if (i == 0) {
 				Vector<String> newRow = new Vector<String>();
 				mod.addRow(newRow);
 				mod.getDataVector().clear();
 			} else {
 				Arrays.sort(clients);
+				System.out.println(clients.toString());
 				for (i = 0; i < count; i++) {
 					if (clients[i].getStatus() == 10)
 						break;
@@ -374,7 +401,7 @@ public class Call  extends Main_Center_Panel {
 				}
 			}
 			SQL.closeConnect(connect1);
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			System.out.println("Проблема с БД. Call.java");
 			System.out.println(e.getMessage());
 			e.printStackTrace();
@@ -385,9 +412,28 @@ public class Call  extends Main_Center_Panel {
 		}
 	}
 	public Call() {
-		initComponents();
-		setBackground(Color.WHITE);
-		setLayout(new BorderLayout());
+		new Thread(){
+			@Override
+			public void run() {
+				super.run();
+				initComponents();				
+			}
+		}.start();
+		/*headerVect.clear();
+		headerVect.add("Доставщик");
+		headerVect.add("Тренер");
+		headerVect.add("Зал");
+		headerVect.add("Вк Спамщика");
+		headerVect.add("Имя");
+		headerVect.add("Номер");
+		headerVect.add("Вк клиента");
+		headerVect.add("Дата");
+		headerVect.add("Адресс");
+		headerVect.add("Комментарий");
+		headerVect.add("Статус");
+		headerVect.add("Номер звонка");
+		headerVect.add("Дата звонка");*/
+		//mod = new DefaultTableModel(headerVect, 0);
 		JPopupMenu popup = new JPopupMenu();
 		JMenuItem itemTrainer = new JMenuItem("Тренер");
 		popup.add(itemTrainer);
@@ -414,7 +460,6 @@ public class Call  extends Main_Center_Panel {
 				Common.Sink(clients[selectedClient]);
 			}
 		});
-		JButton btnAdd = new JButton("Добавить клиента");
 		table.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
@@ -448,6 +493,7 @@ public class Call  extends Main_Center_Panel {
 			public void mouseClicked(MouseEvent e) {
 			}
 		});
+		JButton btnAdd = new JButton("Добавить клиента");
 		btnAdd.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {

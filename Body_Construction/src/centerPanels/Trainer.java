@@ -53,11 +53,11 @@ public class Trainer extends JPanel {
 			clients = new Client[count];
 			rs.first();
 			int i = 0;
+			connect2 = DriverManager.getConnection(URL,main.Constants.connInfo);
 			do {
 
 				queryDates = "SELECT * FROM `dates` WHERE `Client_id`="
 						+ rs.getInt("id") + "  ORDER BY `Date`";
-				connect2 = DriverManager.getConnection(URL,main.Constants.connInfo);
 				ResultSet rsDates = SQL.doSQL(queryDates, connect2);
 				clients[i] = new Client();
 				clients[i].setId(rs.getInt("id"));
@@ -69,15 +69,15 @@ public class Trainer extends JPanel {
 				clients[i].setAccountClient(rs.getString("Vk_Client"));
 				clients[i].setDate(rs.getString("Date"));
 				clients[i].setAddress(rs.getString("Address"));
-				clients[i].setComment(rs.getString("Сomment"));
+				clients[i].setComment(rs.getString("Comment"));
 				clients[i].setStatus(rs.getInt("Status"));
 				if (rsDates.last()) {
 					clients[i].setDateCall(rsDates.getString("Date"));
 				}
-				SQL.closeConnect(connect2);
 				
 				i++;
 			} while (rs.next());
+			SQL.closeConnect(connect2);
 			if(i == 0)
 			{
 				Vector<String> newRow = new Vector<String>();
@@ -117,62 +117,7 @@ public class Trainer extends JPanel {
 			table.setRowSelectionInterval(row, row);
 		}
 	}
-	private void initNextCall()
-	{
-		
-			frameNextCall.setSize(162, 150);
-			frameNextCall.setResizable(false);
-			panelNextCall.setLayout(null);
-			JLabel lblDateCall = new JLabel("Дата");
-			lblDateCall.setBounds(20, 5, 100, 30);
-			lblDateCall.setFont(new Font("Arial", 1, 20));
-			DateTimePicker dateTimePicker = new DateTimePicker();
-			dateTimePicker.setFormats(DateFormat.getDateTimeInstance(
-					DateFormat.SHORT, DateFormat.MEDIUM));
-			dateTimePicker.setTimeFormat(DateFormat
-					.getTimeInstance(DateFormat.MEDIUM));
-			dateTimePicker.setDate(Calendar.getInstance().getTime());
-			dateTimePicker.setBounds(20, 35, 115, 26);
-			JButton btnOk = new JButton("ОК");
-			btnOk.setBounds(40, 65, 75, 30);
-			btnOk.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					clients[selectedClient]
-							.setNumberDates(clients[selectedClient]
-									.getNumberDates() + 1);
-					Connection connect = null;
-					try {
-
-						connect = DriverManager.getConnection(URL,main.Constants.connInfo);
-					} catch (SQLException e1) {
-						System.out
-								.println("Проблема с БД. Call.Java, nextCall");
-					}
-					int id = clients[selectedClient].getId();
-					String dateQuery = "INSERT INTO `dates` (`Client_id`, `Call`,`Type`,`Number`, `Date`, `State`)"
-							+ "VALUES ("
-							+ id
-							+ ", '"
-							+ User.CurrentUser0
-							+ "', "
-							+ "0"
-							+ ", "
-							+ clients[selectedClient].getNumberDates()
-							+ ", '"
-							+ Common.getDate(dateTimePicker.getDate())
-							+ "', '0') ";
-					SQL.doSQLWithoutResult(dateQuery, connect);
-					SQL.closeConnect(connect);
-					frameNextCall.setVisible(false);
-				}
-			});
-			panelNextCall.add(lblDateCall);
-			panelNextCall.add(dateTimePicker);
-			panelNextCall.add(btnOk);
-			frameNextCall.add(panelNextCall);
-	}
-
+	
 	public Trainer() {
 		setLayout(new BorderLayout());
 		Vector<String> headerVect = new Vector<String>();

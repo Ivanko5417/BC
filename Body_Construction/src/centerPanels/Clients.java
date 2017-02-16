@@ -43,8 +43,8 @@ import panels.Common;
 public class Clients extends Main_Center_Panel { 
 	JFrame frameAdd = new JFrame("Добавить клиента");
 	JPanel panelAdd = new JPanel();
-	private void addClient() {
-		frameAdd.setVisible(true);
+	private void initClient()
+	{
 		frameAdd.setSize(400, 400);
 		panelAdd.setLayout(null);
 		JLabel lblAccountSpam = new JLabel("Ссылка на аккаунт спама");
@@ -111,42 +111,54 @@ public class Clients extends Main_Center_Panel {
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				try {
-					Date date = Calendar.getInstance().getTime();
-					Connection connect = null;
-					connect = DriverManager.getConnection(URL, USER_NAME,
-							PASSWORD);
-					String query = "INSERT INTO `clients` (`Spam`, `Vk_Spam`, `Name_Client`, `Number`, `Vk_Client`, `Date`, `Note`, `Status`)"
-							+ " values('" + User.CurrentUser0 + "', '"
-							+ txtAccountSpam.getText() + "', " + "'"
-							+ txtName.getText() + "', '" + txtNumber.getText()
-							+ "', " + "'" + txtAccountClient.getText() + "',"
-							+ " '" + Common.getDate(date) + "', " + "'"
-							+ txtComment.getText() + "', 0)";
-					SQL.doSQLWithoutResult(query, connect);
-					query = "SELECT * FROM clients WHERE Number='"
-							+ txtNumber.getText() + "';";
-					ResultSet rs = SQL.doSQL(query, connect);
-					int id = -1;
-					while (rs.next()) {
-						id = rs.getInt("id");
+				new Thread(){
+					@Override
+					public void run() {
+						super.run();
+
+						frameAdd.setVisible(false);
+						try {
+							Date date = Calendar.getInstance().getTime();
+							Connection connect = null;
+							connect = DriverManager.getConnection(URL, USER_NAME,
+									PASSWORD);
+							String query = "INSERT INTO `clients` (`Spam`, `Vk_Spam`, `Name_Client`, `Number`, `Vk_Client`, `Date`, `Comment`, `Status`)"
+									+ " values('" + User.CurrentUser0 + "', '"
+									+ txtAccountSpam.getText() + "', " + "'"
+									+ txtName.getText() + "', '" + txtNumber.getText()
+									+ "', " + "'" + txtAccountClient.getText() + "',"
+									+ " '" + Common.getDate(date) + "', " + "'"
+									+ txtComment.getText() + "', 0)";
+							SQL.doSQLWithoutResult(query, connect);
+							query = "SELECT * FROM clients WHERE Number='"
+									+ txtNumber.getText() + "';";
+							ResultSet rs = SQL.doSQL(query, connect);
+							int id = -1;
+							while (rs.next()) {
+								id = rs.getInt("id");
+							}
+							query = "INSERT INTO `dates` (`Client_id`, `Type`, `Date`, `State`) "
+									+ "values(" + id + ",0,'"
+									+ Common.getDate(dateTimePicker.getDate())
+									+ "' ,0)";
+							SQL.doSQLWithoutResult(query, connect);
+							SQL.closeConnect(connect);
+						} catch (Exception e) {
+							System.out.println("Проблема с добавлением записи в БД.\n"
+									+ e.getMessage());
+						}
 					}
-					query = "INSERT INTO `dates` (`Client_id`, `Type`, `Date`, `State`) "
-							+ "values(" + id + ",0,'"
-							+ Common.getDate(dateTimePicker.getDate())
-							+ "' ,0)";
-					SQL.doSQLWithoutResult(query, connect);
-					SQL.closeConnect(connect);
-				} catch (Exception e) {
-					System.out.println("Проблема с добавлением записи в БД.\n"
-							+ e.getMessage());
-				}
-				frameAdd.setVisible(false);
+				}.start();
+				
 			}
 		});
 		refreshTable();
 		panelAdd.add(btnOk);
 		frameAdd.add(panelAdd);
+	}
+	private void addClient() {
+
+		frameAdd.setVisible(true);
 	}
 	public void refreshTable() {
 		int column = table.getSelectedColumn(), row = table.getSelectedRow();
@@ -167,7 +179,6 @@ public class Clients extends Main_Center_Panel {
 					clients[i] = new Client();
 					clients[i].setSource(rs.getString("From"));
 					clients[i].setSpam(rs.getString("Spam"));
-					System.out.println(clients[i].getSpam());
 					clients[i].setCall(rs.getString("Call"));
 					clients[i].setCourier(rs.getString("Courier"));
 					clients[i].setTrainer(rs.getString("Trainer"));
@@ -230,7 +241,13 @@ public class Clients extends Main_Center_Panel {
 		}
 	}
 	public Clients() {
-
+		new Thread()
+		{
+			public void run() 
+			{
+				initClient();
+			};
+		}.start();
 		JButton btnAdd = new JButton("Добавить клиента");
 		btnAdd.addActionListener(new ActionListener() {
 			@Override

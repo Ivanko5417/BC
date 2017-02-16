@@ -7,7 +7,7 @@ import javax.swing.Timer;
 import panels.Common;
 public class MainThread extends Thread {
 	public Timer mainTm;
-	private void refreshTable(int Type) {
+	public static void refreshTable(int Type) {
 		switch (Type) {
 			case 0 :
 				Common.clinetsPanel.refreshTable();
@@ -28,13 +28,23 @@ public class MainThread extends Thread {
 	@Override
 	public void run() {
 		super.run();
-		refreshTable(User.Type);
-		mainTm = new Timer(1500, new ActionListener() {
+		/*mainTm = new Timer(1500, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				refreshTable(User.Type);
 			}
 		});
 		mainTm.start();
+		while(!Thread.currentThread().isInterrupted())
+		{
+			System.out.println("a");
+			refreshTable(User.Type);
+			try {
+				sleep(1500);
+			} catch (InterruptedException e) {
+				System.out.println("Поток прерван");
+				e.printStackTrace();
+			}
+		}*/
 	}
 }

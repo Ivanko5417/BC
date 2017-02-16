@@ -17,7 +17,7 @@ public class Client implements Comparable<Client> {
 			comment, // комментарий
 			gym, // зал, в кот. хочет заниматься
 			courier, // имя доставщика
-			 dateCall; // статус клиента(на обзвоне, готов к пробной и
+			 dateCall = "          "; // статус клиента(на обзвоне, готов к пробной и
 								// т.д.)
 	public int getId() {
 		return id;

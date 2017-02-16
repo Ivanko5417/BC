@@ -26,8 +26,6 @@ import main.Functions;
 import main.SQL;
 import main.User;
 public class Schedule  extends Main_Center_Panel {
-	private JTable table;
-	private DefaultTableModel mod;
 	Client[] clients = null;
 	public void refreshTable() {
 		int column = table.getSelectedColumn(), row = table.getSelectedRow();
@@ -66,7 +64,7 @@ public class Schedule  extends Main_Center_Panel {
 								.getString("Vk_Client"));
 						clients[i].setDate(rsClients.getString("Date"));
 						clients[i].setAddress(rsClients.getString("Address"));
-						clients[i].setComment(rsClients.getString("Ñomment"));
+						clients[i].setComment(rsClients.getString("Comment"));
 						clients[i].setStatus(rsClients.getInt("Status"));
 						Vector<String> newRow = new Vector<String>();
 						newRow.add(clients[i].getTrainer());

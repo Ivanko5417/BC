@@ -19,6 +19,7 @@ import panels.Common;
 public class Main_Center_Panel extends JPanel {
 	Vector<String> headerVect = new Vector<String>();
 	protected JTable table;
+	protected JScrollPane scrollPane;
 	protected DefaultTableModel mod;
 	public void refreshTable()
 	{
@@ -29,7 +30,6 @@ public class Main_Center_Panel extends JPanel {
 	{
 		setBackground(Color.WHITE);
 		setLayout(new BorderLayout());
-		//headerVect.add("Источник");
 		headerVect.add("Звонильщик");
 		headerVect.add("Доставщик");
 		headerVect.add("Тренер");
@@ -73,7 +73,7 @@ public class Main_Center_Panel extends JPanel {
 		mod = new DefaultTableModel(headerVect, 0);
 		table.setModel(mod);
 		table.setSelectionMode(0);
-		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane = new JScrollPane(table);
 		scrollPane.setVerticalScrollBarPolicy(
 				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		add(scrollPane, BorderLayout.CENTER);
