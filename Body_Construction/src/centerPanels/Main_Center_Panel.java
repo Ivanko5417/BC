@@ -12,20 +12,46 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 import panels.Common;
+import table.ColorRenderer;
+import table.HeaderColorRenderer;
+import table.MainTableModel;
 
-public class Main_Center_Panel extends JPanel {
+public class Main_Center_Panel extends JPanel  {
 	Vector<String> headerVect = new Vector<String>();
 	protected JTable table;
 	protected JScrollPane scrollPane;
-	protected DefaultTableModel mod;
+	protected MainTableModel mod;
 	public void refreshTable()
 	{
+		table.revalidate();
+		table.repaint();
+		
+		mod.addTableModelListener(new TableModelListener() {
+			@Override
+			public void tableChanged(TableModelEvent e) {
+				System.out.println("d");
+			}
+		});
+	}
+	public void revalidate(Vector<String> header)
+	{
+		mod = new MainTableModel(header);
+		table.setModel(mod);
+		for(int i = 0; i < mod.getColumnCount(); i++)
+		{
+			table.getColumn(mod.getColumnName(i)).setCellRenderer(new ColorRenderer());
+		}
+        table.getTableHeader().setDefaultRenderer(new HeaderColorRenderer());
 		
 	}
-	
+	public void clearSelection()
+	{
+		table.clearSelection();
+	}
 	public Main_Center_Panel()
 	{
 		setBackground(Color.WHITE);
@@ -34,7 +60,7 @@ public class Main_Center_Panel extends JPanel {
 		headerVect.add("Доставщик");
 		headerVect.add("Тренер");
 		headerVect.add("Зал");
-		headerVect.add("Вк Спамщика");
+		headerVect.add("Вк аккаунта");
 		headerVect.add("Имя");
 		headerVect.add("Номер");
 		headerVect.add("Вк клиента");
@@ -50,6 +76,7 @@ public class Main_Center_Panel extends JPanel {
 				return false;
 			}
 		};
+
 		table.addKeyListener(new KeyListener() {
 			@Override
 			public void keyTyped(KeyEvent e) {
@@ -62,7 +89,7 @@ public class Main_Center_Panel extends JPanel {
 				{ 
 					if(table.getSelectedRow() != -1 && table.getSelectedRow() != -1)
 					{
-						String s = Common.clients[table.getSelectedRow()].get(table.getSelectedColumn());
+						String s = Common.clients.get(table.getSelectedRow()).get(table.getSelectedColumn());
 					    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), null);
 					}
 					System.out.println("asd");
@@ -70,8 +97,6 @@ public class Main_Center_Panel extends JPanel {
 				}
 			}
 		});
-		mod = new DefaultTableModel(headerVect, 0);
-		table.setModel(mod);
 		table.setSelectionMode(0);
 		scrollPane = new JScrollPane(table);
 		scrollPane.setVerticalScrollBarPolicy(

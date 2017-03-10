@@ -27,6 +27,11 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
+import centerPanels.Call;
+import centerPanels.Clients;
+import centerPanels.Schedule;
+import centerPanels.Trainer;
+
 public class Authorization extends JPanel {
 
 	public static Common mainPanel;
@@ -37,7 +42,7 @@ public class Authorization extends JPanel {
 		String[][] users = null;//0 - Login,  1 - Pass, 2 -  Name, 3 - Name0, 4 - Type
 		try
 		{
-			connect = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+			connect = DriverManager.getConnection(URL, connInfo);
 			ResultSet rs = SQL.doSQL("SELECT * FROM users", connect);
 			int i = 0;
 			rs.last();
@@ -116,8 +121,13 @@ public class Authorization extends JPanel {
 						stream = new MainThread();
 						stream.setDaemon(true);
 						stream.start();
-						
-						
+
+						try {
+							Class.forName(DRIVER_NAME);
+						} catch (ClassNotFoundException e2) {
+							e2.printStackTrace();
+						}
+							
 						break;
 					}
 					else

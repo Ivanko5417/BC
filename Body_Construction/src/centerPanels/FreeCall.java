@@ -1,12 +1,7 @@
 package centerPanels;
 
-import static main.Constants.PASSWORD;
 import static main.Constants.URL;
-import static main.Constants.USER_NAME;
-import static panels.Common.clients;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.Connection;
@@ -15,11 +10,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
 
-
 import main.Client;
+import main.Constants;
 import main.Functions;
 import main.SQL;
 import main.User;
+import table.MainTableModel;
 public class FreeCall  extends Main_Center_Panel  {
 	Client[] clients;
 	private Connection connect = null;
@@ -44,27 +40,21 @@ public class FreeCall  extends Main_Center_Panel  {
 			{
 				clients[i] = new Client();
 				clients[i].setId(rs.getInt("id"));
-				clients[i].setCourier(rs.getString("Courier"));
-				clients[i].setTrainer(rs.getString("Trainer"));
-				clients[i].setGym(rs.getString("Gym"));
+				clients[i].setSpam(rs.getString("Spam"));
 				clients[i].setAccountSpam(rs.getString("Vk_Spam"));
 				clients[i].setName(rs.getString("Name_Client"));
 				clients[i].setNumber(rs.getString("Number"));
 				clients[i].setAccountClient(rs.getString("Vk_Client"));
 				clients[i].setDate(rs.getString("Date"));
-				clients[i].setAddress(rs.getString("Address"));
 				clients[i].setComment(rs.getString("Comment"));
 				clients[i].setStatus(rs.getInt("Status"));
 				Vector<String> newRow = new Vector<String>();
-				newRow.add(clients[i].getCourier());
-				newRow.add(clients[i].getTrainer());
-				newRow.add(clients[i].getGym());
+				newRow.add(clients[i].getSpam());
 				newRow.add(clients[i].getAccountSpam());
 				newRow.add(clients[i].getName());
 				newRow.add(clients[i].getNumber());
 				newRow.add(clients[i].getAccountClient());
 				newRow.add(clients[i].getDate());
-				newRow.add(clients[i].getAddress());
 				newRow.add(clients[i].getComment());
 				newRow.add(Functions.getStatus(clients[i].getStatus()));
 				mod.addRow(newRow);
@@ -89,6 +79,7 @@ public class FreeCall  extends Main_Center_Panel  {
 			table.setColumnSelectionInterval(column, column);
 	        table.setRowSelectionInterval(row, row);
 		}
+		super.refreshTable();
 	}
 	public FreeCall()
 	{
@@ -120,11 +111,11 @@ public class FreeCall  extends Main_Center_Panel  {
 								} catch (SQLException e1) {
 								}
 								int id = clients[table.getSelectedRow()].getId();
-								String query = "UPDATE clients SET `Call` = '"+User.CurrentUser0+"', `Status`= 1 WHERE `id`="
+								String query = "UPDATE clients SET `Call` = '"+User.CurrentUser0+"', `Status`= "+Constants.TypesOfClient.CALL+" WHERE `id`="
 							+id+";";
 								SQL.doSQLWithoutResult(query, connect);
 								refreshTable();
-								query = "UPDATE `dates` SET `Call`='"+User.CurrentUser0+"' WHERE `Client_id`="+id+"";
+								query = "UPDATE `"+Constants.NamesOfTables.DATES+"` SET `Call`='"+User.CurrentUser0+"' WHERE `Client_id`="+id+"";
 								SQL.doSQLWithoutResult(query, connect);
 								SQL.closeConnect(connect);
 							};
@@ -132,6 +123,16 @@ public class FreeCall  extends Main_Center_Panel  {
 					}
 				}
 			});
+	      	headerVect.clear();
+			headerVect.add("Спамщик");
+			headerVect.add("Вк аккаунта");
+			headerVect.add("Имя");
+			headerVect.add("Номер");
+			headerVect.add("Вк клиента");
+			headerVect.add("Дата");
+			headerVect.add("Комментарий");
+			headerVect.add("Статус");
+			revalidate(headerVect);
 		
 	}
 }

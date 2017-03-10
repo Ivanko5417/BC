@@ -25,10 +25,6 @@ public class Left_Bar_Spam extends Left_Bar_Main {
 			}
 		});
 		add(btnClients);
-		JButton btnStats = new JButton("Статистика");
-		btnStats.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnStats.setForeground(new Color(169, 13, 221));
-		add(btnStats);
 		add(btnSettings);
 		add(btnSink);
 		add(btnExit);

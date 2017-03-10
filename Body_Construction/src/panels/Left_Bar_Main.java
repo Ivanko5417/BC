@@ -12,6 +12,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 import main.Main;
 
@@ -23,6 +24,7 @@ public class Left_Bar_Main extends JPanel {
 	public JButton btnSettings = new JButton("Настройки");
 	public JButton btnSink = new JButton("Слив");
 	public JButton btnExit = new JButton("Выход");
+	public JPopupMenu popup;
 	
 	
 	@Override
@@ -48,6 +50,7 @@ public class Left_Bar_Main extends JPanel {
 				Common.setSettings();
 			}
 		});
+		btnSettings.setVisible(false);
 		btnSettings.setAlignmentX(Component.CENTER_ALIGNMENT);
 		btnSettings.setForeground(Color.DARK_GRAY);
 		btnSink.addActionListener(new ActionListener() {

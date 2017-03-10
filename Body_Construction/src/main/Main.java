@@ -14,6 +14,8 @@ import static panels.Common.leftPanelSpam;
 import static panels.Common.leftPanelTrainer;
 import static panels.Common.schedulePanel;
 import static panels.Common.sinkPanel;
+import static panels.Common.leftPanelCourier;
+
 import static panels.Common.settingsPanel;
 
 import javax.swing.JFrame;
@@ -25,13 +27,14 @@ public class Main {
 	public static JFrame frame;
 	public static Authorization panelAuth = null;
 	public static void main(String[] args) {
-		startAauth();
 		Constants.connInfo.setProperty("useSSL","false"); 
 		Constants.connInfo.setProperty("verifyServerCertificate","false");
 		Constants.connInfo.setProperty("user", USER_NAME);
 		Constants.connInfo.setProperty("password", PASSWORD);
 		Constants.connInfo.setProperty("useUnicode","true"); 
 		Constants.connInfo.setProperty("characterEncoding","cp1251");
+		startAauth();
+		
 		
 	}
 	
@@ -66,6 +69,7 @@ public class Main {
 		panelAuth = null;
 		callPanel = null;
 		leftPanelTrainer = null;
+		leftPanelCourier = null;
 		clientsTrainerPanel = null;
 		sinkPanel = null;
 		settingsPanel = null;

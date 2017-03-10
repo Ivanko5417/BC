@@ -1,9 +1,12 @@
 package main;
-import javax.swing.JTable;
-
-import com.sun.org.apache.xerces.internal.util.URI;
 public class Client implements Comparable<Client> {
-	private int id, numberDates, cost, typeOfTrain = -1, status;// номер перезвона, больше 3-х в слив
+	private int id, numberDates,// номер перезвона, больше 3-х в слив
+	cost,//цена пакета 
+	typeOfTrain = -1, //тип тренировки
+			status,// статус клиента(на обзвоне, готов к пробной и
+			lastDateId = -1,
+			day = -1;//день месяца, в котором будет тренировка
+	// т.д.)
 	private String source, // откуда спам
 			accountSpam, // ссылка на акк, с которого был спам
 			name, // имя человека, которого отспамили
@@ -17,8 +20,7 @@ public class Client implements Comparable<Client> {
 			comment, // комментарий
 			gym, // зал, в кот. хочет заниматься
 			courier, // имя доставщика
-			 dateCall = "          "; // статус клиента(на обзвоне, готов к пробной и
-								// т.д.)
+			 lastDate = "          ";  //
 	public int getId() {
 		return id;
 	}
@@ -122,8 +124,10 @@ public class Client implements Comparable<Client> {
 	}
 	@Override
 	public String toString() {
-		return getDateCall() + " " + getDate();
-	}
+		if(User.Type != Constants.TypesOfUsers.TRAINER)
+		return getStatus() + getLastDate() + " " + getDate();
+		else return getLastDate() + " " + getDate();
+	} 
 	@Override
 	public int compareTo(Client o) {
 		if(this.getStatus() == 10 && this.getStatus() == o.getStatus())
@@ -149,11 +153,11 @@ public class Client implements Comparable<Client> {
 		}
 		return true;
 	}
-	public String getDateCall() {
-		return dateCall;
+	public String getLastDate() {
+		return lastDate;
 	}
-	public void setDateCall(String dateCall) {
-		this.dateCall = dateCall;
+	public void setLastDate(String lastDate) {
+		this.lastDate = lastDate;
 	}
 	public int getTypeOfTrain() {
 		return typeOfTrain;
@@ -201,5 +205,17 @@ public class Client implements Comparable<Client> {
 				return getTypeOfTrain() + "";
 		}
 		return "";
+	}
+	public int getLastDateId() {
+		return lastDateId;
+	}
+	public void setLastDateId(int lastDateId) {
+		this.lastDateId = lastDateId;
+	}
+	public int getDay() {
+		return day;
+	}
+	public void setDay(int day) {
+		this.day = day;
 	}
 }

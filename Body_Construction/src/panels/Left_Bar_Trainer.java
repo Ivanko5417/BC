@@ -31,7 +31,11 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
+import centerPanels.Call;
+import centerPanels.Main_Center_Panel;
+import centerPanels.Schedule;
 import main.Client;
+import main.Constants;
 import main.DateTimePicker;
 import main.SQL;
 import main.User;
@@ -53,13 +57,23 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 				int row = table.rowAtPoint(point);
 				table.setColumnSelectionInterval(column, column);
 				table.setRowSelectionInterval(row, row);
-				cl = Common.clients[table.getSelectedRow()];
-				System.out.println(cl.getId());
+				if(Common.schedulePanel.isEnable())
+					cl = Common.schedulePanel.getClients().get(table.getSelectedRow());
+				else
+				cl = Common.clients.get(table.getSelectedRow());
 				JScrollPane scrollPane = (JScrollPane) (table.getParent()
 						.getParent());
 				Point p = scrollPane.getMousePosition();
-				popupTrainer.show(scrollPane.getParent(), (int) p.getX() + 1,
-						(int) p.getY() + 1);
+				if (Common.schedulePanel.isEnable())
+					popupTrainer
+							.show(scrollPane.getParent(), (int) p.getX() + 1,
+									(int) p.getY() + 1
+											+ (int) Common.schedulePanel.headerPanel
+													.getPreferredSize()
+													.getHeight());
+				else
+					popupTrainer.show(scrollPane.getParent(),
+							(int) p.getX() + 1, (int) p.getY() + 1);
 			}
 		}
 		@Override
@@ -72,6 +86,15 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 		public void mouseClicked(MouseEvent arg0) {
 		}
 	};
+	private void clearSelection()
+	{
+
+		if(Common.schedulePanel.isEnable())
+		{
+			Common.schedulePanel.clearSelection();
+		}else
+			Common.clientsTrainerPanel.clearSelection();
+	}
 	private void initMoneyFrame() {
 		String[] sTypes = {"Сушка", "Масса"};
 		String[] sCosts = {"76", "99", "129", "249"};
@@ -95,8 +118,8 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 		DateTimePicker dateTimePicker = new DateTimePicker();
 		dateTimePicker.setFormats(DateFormat
 				.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM));
-		dateTimePicker
-				.setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
+		dateTimePicker.setTimeFormat(
+				DateFormat.getTimeInstance(DateFormat.DATE_FIELD));
 		dateTimePicker.setDate(Calendar.getInstance().getTime());
 		dateTimePicker.setBounds(35, 120, 215, 26);
 		panelMoney.add(dateTimePicker);
@@ -118,23 +141,24 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 				int typeOfTrain = -1;
 				switch ((String) cmTypeOfTrain.getSelectedItem()) {
 					case "Сушка" :
-						typeOfTrain = 0;
+						typeOfTrain = Constants.TypesOfTrain.DRYING;
 						break;
 					case "Масса" :
-						typeOfTrain = 1;
+						typeOfTrain = Constants.TypesOfTrain.MASS;
 						break;
 				}
-				String query = "UPDATE `clients` SET `Status` = 4, `Cost` = "
+				String query = "UPDATE `clients` SET `Status` = "+Constants.TypesOfClient.PAY+", `Cost` = "
 						+ cmCost.getSelectedItem() + ", `TypeOfTrain` = '"
 						+ typeOfTrain + "' WHERE `id` = " + id;
 				SQL.doSQLWithoutResult(query, connect);
-				query = "INSERT INTO `dates` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
-						+ id + ", '" + User.CurrentUser0 + "','4', '"
+				query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
+						+ id + ", '" + User.CurrentUser0 + "','"+Constants.TypesOfDates.PAY+"', '"
 						+ Common.getDateTime(dateTimePicker.getDate())
 						+ "', 0)";
 				SQL.doSQLWithoutResult(query, connect);
 				SQL.closeConnect(connect);
 				frameMoney.setVisible(false);
+				clearSelection();
 			}
 		});
 		panelMoney.add(lblDate);
@@ -172,16 +196,19 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 					connect = DriverManager.getConnection(URL, USER_NAME,
 							PASSWORD);
 				} catch (SQLException e1) {
-					System.out.println("Проблема с БД. Left_Bar_Train.Java, nextCall");
+					System.out.println(
+							"Проблема с БД. Left_Bar_Train.Java, nextCall");
 				}
 				int id = cl.getId();
-				String dateQuery = "INSERT INTO `dates` (`Client_id`, `Trainer`,`Type`,`Number`, `Date`, `State`)"
+				String dateQuery = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Trainer`,`Type`,`Number`, `Date`, `State`)"
 						+ "VALUES (" + id + ", '" + User.CurrentUser0 + "', "
-						+ "3" + ", " + cl.getNumberDates() + ", '"
-						+ Common.getDateTime(dateTimePicker.getDate()) + "', '0') ";
+						+ Constants.TypesOfDates.TRIAL + ", " + cl.getNumberDates() + ", '"
+						+ Common.getDateTime(dateTimePicker.getDate())
+						+ "', '0') ";
 				SQL.doSQLWithoutResult(dateQuery, connect);
 				SQL.closeConnect(connect);
 				frameTrainShift.setVisible(false);
+				clearSelection();
 			}
 		});
 		panelTrainShift.add(lblDateTrain);
@@ -200,7 +227,11 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 		itemSink.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Common.Sink(cl);
+				if (Common.schedulePanel.isEnabled())
+					Common.Sink(cl, Common.schedulePanel);
+				else
+					Common.Sink(cl, Common.clientsTrainerPanel);
+				clearSelection();
 			}
 		});
 		JMenuItem itemTrainShift = new JMenuItem("Перенос");
@@ -216,6 +247,7 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 		itemCall.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				clearSelection();
 			}
 		});
 		JMenuItem itemMoney = new JMenuItem("Дошёл");
@@ -236,6 +268,16 @@ public class Left_Bar_Trainer extends Left_Bar_Main {
 			}
 		});
 		add(btnSchedule);
+		JButton btnScheduleWeek = new JButton("Расписание");
+		btnScheduleWeek.setAlignmentX(Component.CENTER_ALIGNMENT);
+		btnScheduleWeek.setForeground(new Color(231, 124, 154));
+		btnScheduleWeek.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				Common.setScheduleWeek();
+			}
+		});
+		add(btnScheduleWeek);
 		JButton btnClients = new JButton("Мои клиенты");
 		btnClients.setAlignmentX(Component.CENTER_ALIGNMENT);
 		btnClients.setForeground(new Color(39, 124, 78));

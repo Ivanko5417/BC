@@ -5,22 +5,16 @@ import static main.Constants.USER_NAME;
 import static panels.Common.clients;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.JButton;
@@ -28,21 +22,22 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.table.DefaultTableModel;
 
 import main.Client;
+import main.Constants;
 import main.DateTimePicker;
 import main.Functions;
 import main.SQL;
 import main.User;
 import panels.Common;
+import table.MainTableModel;
 public class Clients extends Main_Center_Panel { 
 	JFrame frameAdd = new JFrame("Добавить клиента");
 	JPanel panelAdd = new JPanel();
+	public static Connection connect;
 	private void initClient()
 	{
 		frameAdd.setSize(400, 400);
@@ -128,7 +123,7 @@ public class Clients extends Main_Center_Panel {
 									+ txtName.getText() + "', '" + txtNumber.getText()
 									+ "', " + "'" + txtAccountClient.getText() + "',"
 									+ " '" + Common.getDate(date) + "', " + "'"
-									+ txtComment.getText() + "', 0)";
+									+ txtComment.getText() + "', '"+Constants.TypesOfClient.SPAM+"')";
 							SQL.doSQLWithoutResult(query, connect);
 							query = "SELECT * FROM clients WHERE Number='"
 									+ txtNumber.getText() + "';";
@@ -137,8 +132,8 @@ public class Clients extends Main_Center_Panel {
 							while (rs.next()) {
 								id = rs.getInt("id");
 							}
-							query = "INSERT INTO `dates` (`Client_id`, `Type`, `Date`, `State`) "
-									+ "values(" + id + ",0,'"
+							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Type`, `Date`, `State`) "
+									+ "values(" + id + ",'"+Constants.TypesOfDates.CALL+"','"
 									+ Common.getDate(dateTimePicker.getDate())
 									+ "' ,0)";
 							SQL.doSQLWithoutResult(query, connect);
@@ -152,7 +147,6 @@ public class Clients extends Main_Center_Panel {
 				
 			}
 		});
-		refreshTable();
 		panelAdd.add(btnOk);
 		frameAdd.add(panelAdd);
 	}
@@ -164,35 +158,34 @@ public class Clients extends Main_Center_Panel {
 		int column = table.getSelectedColumn(), row = table.getSelectedRow();
 		mod.getDataVector().clear();
 		try {
-			Connection connect;
-			connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+			connect = DriverManager.getConnection(URL,Constants.connInfo);
 			String query = "SELECT * FROM `clients` WHERE `Spam`='"
 					+ User.CurrentUser0 + "'";
 			ResultSet rs = SQL.doSQL(query, connect);
 			rs.last();
 			int count = rs.getRow();
-			clients = new Client[count];
+			clients.clear();
 			rs.first();
 			int i = 0;
 			if(count > 0)
 			do {
-					clients[i] = new Client();
-					clients[i].setSource(rs.getString("From"));
-					clients[i].setSpam(rs.getString("Spam"));
-					clients[i].setCall(rs.getString("Call"));
-					clients[i].setCourier(rs.getString("Courier"));
-					clients[i].setTrainer(rs.getString("Trainer"));
-					clients[i].setGym(rs.getString("Gym"));
-					clients[i].setAccountSpam(rs.getString("Vk_Spam"));
-					clients[i].setName(rs.getString("Name_Client"));
-					clients[i].setNumber(rs.getString("Number"));
-					clients[i].setAccountClient(rs.getString("Vk_Client"));
-					clients[i].setDate(rs.getString("Date"));
-					clients[i].setAddress(rs.getString("Address"));
-					clients[i].setComment(rs.getString("Comment"));
-					clients[i].setStatus(rs.getInt("Status"));
-					clients[i].setCost(rs.getInt("Cost"));
-					clients[i].setTypeOfTrain(rs.getInt("TypeOfTrain"));
+					clients.add(new Client());
+					clients.get(i).setSource(rs.getString("From"));
+					clients.get(i).setSpam(rs.getString("Spam"));
+					clients.get(i).setCall(rs.getString("Call"));
+					clients.get(i).setCourier(rs.getString("Courier"));
+					clients.get(i).setTrainer(rs.getString("Trainer"));
+					clients.get(i).setGym(rs.getString("Gym"));
+					clients.get(i).setAccountSpam(rs.getString("Vk_Spam"));
+					clients.get(i).setName(rs.getString("Name_Client"));
+					clients.get(i).setNumber(rs.getString("Number"));
+					clients.get(i).setAccountClient(rs.getString("Vk_Client"));
+					clients.get(i).setDate(rs.getString("Date"));
+					clients.get(i).setAddress(rs.getString("Address"));
+					clients.get(i).setComment(rs.getString("Comment"));
+					clients.get(i).setStatus(rs.getInt("Status"));
+					clients.get(i).setCost(rs.getInt("Cost"));
+					clients.get(i).setTypeOfTrain(rs.getInt("TypeOfTrain"));
 				i++;
 			} while (rs.next());
 			if (i == 0) {
@@ -202,34 +195,33 @@ public class Clients extends Main_Center_Panel {
 			}
 			else
 			{
-				Arrays.sort(clients);
+				Collections.sort(clients);
 				for( i = 0; i < count; i++)
 				{
-					if(clients[i].getStatus() == 10)
+					if(clients.get(i).getStatus() == Constants.TypesOfClient.SINK)
 						break;
 
 					Vector<String> newRow = new Vector<String>();
-					newRow.add(clients[i].getCall());
-					newRow.add(clients[i].getCourier());
-					newRow.add(clients[i].getTrainer());
-					newRow.add(clients[i].getGym());
-					newRow.add(clients[i].getAccountSpam());
-					newRow.add(clients[i].getName());
-					newRow.add(clients[i].getNumber());
-					newRow.add(clients[i].getAccountClient());
-					newRow.add(clients[i].getDate());
-					newRow.add(clients[i].getAddress());
-					newRow.add(clients[i].getComment());
-					newRow.add(Functions.getStatus(clients[i].getStatus()));
-					if(clients[i].getCost() != -1)
+					newRow.add(clients.get(i).getCall());
+					newRow.add(clients.get(i).getCourier());
+					newRow.add(clients.get(i).getTrainer());
+					newRow.add(clients.get(i).getGym());
+					newRow.add(clients.get(i).getAccountSpam());
+					newRow.add(clients.get(i).getName());
+					newRow.add(clients.get(i).getNumber());
+					newRow.add(clients.get(i).getAccountClient());
+					newRow.add(clients.get(i).getDate());
+					newRow.add(clients.get(i).getAddress());
+					newRow.add(clients.get(i).getComment());
+					newRow.add(Functions.getStatus(clients.get(i).getStatus()));
+					if(clients.get(i).getCost() != -1)
 					{
-						newRow.add(""+clients[i].getCost());
-						newRow.add(Functions.getTypeOfTrain(clients[i].getTypeOfTrain()));
+						newRow.add(""+clients.get(i).getCost());
+						newRow.add(Functions.getTypeOfTrain(clients.get(i).getTypeOfTrain()));
 					}
 					mod.addRow(newRow);
 				}
 			}
-			SQL.closeConnect(connect);
 		} catch (SQLException e) {
 			System.out.println("Проблема с БД. Clients.java");
 			System.out.println(e.getMessage());
@@ -239,6 +231,7 @@ public class Clients extends Main_Center_Panel {
 			table.setColumnSelectionInterval(column, column);
 			table.setRowSelectionInterval(row, row);
 		}
+		super.refreshTable();
 	}
 	public Clients() {
 		new Thread()
@@ -255,6 +248,8 @@ public class Clients extends Main_Center_Panel {
 				addClient();
 			}
 		});
+
+		revalidate(headerVect);
 		add(btnAdd, BorderLayout.SOUTH);
 	}
 }

@@ -1,12 +1,8 @@
 package centerPanels;
-import static main.Constants.PASSWORD;
 import static main.Constants.URL;
-import static main.Constants.USER_NAME;
 import static panels.Common.clients;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,8 +14,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Vector;
 
@@ -30,30 +26,37 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.table.DefaultTableModel;
 
 import main.Client;
+import main.Constants;
 import main.DateTimePicker;
 import main.Functions;
 import main.SQL;
 import main.User;
 import panels.Common;
-public class Call  extends Main_Center_Panel {
+import table.MainTableModel;
+import table.ColorRenderer;
+public class Call extends Main_Center_Panel {
 	private JFrame frameAdd = new JFrame("Добавить клиента");
 	private JPanel panelAdd = new JPanel();
 	private JFrame frameNextCall = new JFrame("Новый звонок");
 	private JPanel panelNextCall = new JPanel();
 	private JFrame frameAddTrainer = new JFrame("Тренер");
 	private JPanel panelAddTrainer = new JPanel();
+	private JFrame frameAddDelivery = new JFrame("Доставка");
+	private JPanel panelAddDelivery = new JPanel();
+	private JButton btnOk = new JButton("OK");
 	private Connection connect1 = null;
 	private Connection connect2 = null;
-	private int selectedClient = -1, length = 0;
+	private int x = 20, y = 20;
+	private int length = 0;
+	public void addCall() {
+		frameAdd.setVisible(true);
+	}
 	private void initAddCall() {
 		frameAdd.setSize(400, 400);
 		panelAdd.setLayout(null);
@@ -62,7 +65,8 @@ public class Call  extends Main_Center_Panel {
 		lblFrom.setSize(200, 30);
 		panelAdd.add(lblFrom);
 		String[] sFrome = {"Instagram", "Body24.com", "Facebook", "VK"};
-		JComboBox cmFrom = new JComboBox(sFrome);
+		JComboBox jComboBox = new JComboBox(sFrome);
+		JComboBox cmFrom = jComboBox;
 		cmFrom.setLocation(10, 40);
 		cmFrom.setSize(200, 20);
 		panelAdd.add(cmFrom);
@@ -110,45 +114,44 @@ public class Call  extends Main_Center_Panel {
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-
-				new Thread()
-				{
-					public void run() 
-					{
+				new Thread() {
+					public void run() {
 						frameAdd.setVisible(false);
 						try {
 							Date date = Calendar.getInstance().getTime();
 							Connection connect = null;
-
-							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
-							String query = "INSERT INTO `clients` (From, Name_Client, Number,Call, Date, Comment, Status)"
-									+ " values('"+cmFrom.getSelectedItem()+"'," + "'"
-									+ txtName.getText() + "', '" + txtNumber.getText()
-									+ "','"+User.CurrentUser0+"', "
-									+ " '20" + (date.getYear() % 100) + "."
-									+ (date.getMonth() + 1) + "." + date.getDate()
-									+ "', " + "'" + txtComment.getText() + "', 1)";
+							connect = DriverManager.getConnection(URL,
+									main.Constants.connInfo);
+							String query = "INSERT INTO `"+Constants.NamesOfTables.NUMBERS+"` (From, Name_Client, Number,Call, Date, Comment, Status)"
+									+ " values('" + cmFrom.getSelectedItem()
+									+ "'," + "'" + txtName.getText() + "', '"
+									+ txtNumber.getText() + "','"
+									+ User.CurrentUser0 + "', " + " '20"
+									+ (date.getYear() % 100) + "."
+									+ (date.getMonth() + 1) + "."
+									+ date.getDate() + "', " + "'"
+									+ txtComment.getText() + "', '"+Constants.TypesOfClient.CALL+"')";
 							SQL.doSQLWithoutResult(query, connect);
-							query = "SELECT * FROM `clients` WHERE Number='"
+							query = "SELECT * FROM `"+Constants.NamesOfTables.NUMBERS+"` WHERE Number='"
 									+ txtNumber.getText() + "';";
 							ResultSet rs = SQL.doSQL(query, connect);
 							int id = -1;
 							while (rs.next()) {
 								id = rs.getInt("id");
 							}
-							query = "INSERT INTO dates (Client_id, Value, Date, State) "
-									+ "values(" + id + ",'Зв1','" + txtDate.getText()
-									+ "' ,0)";
+							query = "INSERT INTO "+Constants.NamesOfTables.DATES+" (Client_id, Value, Date, State) "
+									+ "values(" + id + ",'Зв1','"
+									+ txtDate.getText() + "' ,0)";
 							SQL.doSQLWithoutResult(query, connect);
 							SQL.closeConnect(connect);
 							refreshTable();
 						} catch (Exception e) {
-							System.out.println("Проблема с добавлением записи в БД.\n"
-									+ e.getMessage());
+							System.out.println(
+									"Проблема с добавлением записи в БД.\n"
+											+ e.getMessage());
 						}
 					};
 				}.start();
-				
 			}
 		});
 		panelAdd.add(btnOk);
@@ -160,7 +163,7 @@ public class Call  extends Main_Center_Panel {
 		panelNextCall.setLayout(null);
 		JLabel lblDateCall = new JLabel("Дата");
 		lblDateCall.setBounds(20, 5, 100, 30);
-		lblDateCall.setFont(new Font("Arial", 1, 20));
+		lblDateCall.setFont(Constants.GENERAL_LABEL_FONT);
 		DateTimePicker dateTimePicker = new DateTimePicker();
 		dateTimePicker.setFormats(DateFormat
 				.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM));
@@ -173,31 +176,34 @@ public class Call  extends Main_Center_Panel {
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				new Thread()
-				{
-					public void run() 
-					{
-						clients[selectedClient].setNumberDates(
-								clients[selectedClient].getNumberDates() + 1);
+				new Thread() {
+					public void run() {
+						Common.currectCient.setNumberDates(
+								Common.currectCient.getNumberDates() + 1);
 						Connection connect = null;
 						try {
-
-							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+							connect = DriverManager.getConnection(URL,
+									main.Constants.connInfo);
 						} catch (SQLException e1) {
-							System.out.println("Проблема с БД. Call.Java, nextCall");
+							System.out.println(
+									"Проблема с БД. Call.Java, nextCall");
 						}
-						int id = clients[selectedClient].getId();
-						String dateQuery = "INSERT INTO `dates` (`Client_id`, `Call`,`Type`,`Number`, `Date`, `State`)"
-								+ "VALUES (" + id + ", '" + User.CurrentUser0 + "', "
-								+ "0" + ", " + clients[selectedClient].getNumberDates()
-								+ ", '" + Common.getDate(dateTimePicker.getDate())
-								+ "', '0') ";
+						int id = Common.currectCient.getId();
+						String dateQuery = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Call`,`Type`,`Number`, `Date`, `State`)"
+								+ "VALUES (" + id + ", '" + User.CurrentUser0
+								+ "', " + "0" + ", "
+								+ Common.currectCient.getNumberDates() + ", '"
+								+ Common.getDate(dateTimePicker.getDate())
+								+ "', '"+Constants.TypesOfDates.CALL+"') ";
 						SQL.doSQLWithoutResult(dateQuery, connect);
 						SQL.closeConnect(connect);
 						frameNextCall.setVisible(false);
+						clearSelection();
+						refreshTable();
+						Common.schedulePanel.clearSelection();
+						Common.schedulePanel.refreshTable();
 					};
 				}.start();
-				
 			}
 		});
 		panelNextCall.add(lblDateCall);
@@ -206,31 +212,38 @@ public class Call  extends Main_Center_Panel {
 		frameNextCall.add(panelNextCall);
 	}
 	private void initAddTrainer() {
-		frameAddTrainer.setSize(300, 240);
+		frameAddTrainer.setSize(600, 240);
 		panelAddTrainer.setLayout(null);
 		length = 0;
 		Connection connect = null;
 		ArrayList<String> gyms = new ArrayList<String>();
+		ArrayList<String> couriers = new ArrayList<String>();
 		String[][] trainers = new String[50][2];
 		try {
-			connect = DriverManager.getConnection(URL,main.Constants.connInfo);
-			String queryTrainer = "SELECT * FROM `users` WHERE `Type` = 3";
-			ResultSet rsTrainer = SQL.doSQL(queryTrainer, connect);
-			while (rsTrainer.next()) {
-				String s = rsTrainer.getString("Gym");
-				String s1 = rsTrainer.getString("Name0");
+			connect = DriverManager.getConnection(URL, main.Constants.connInfo);
+			String query = "SELECT * FROM `users` WHERE `Type` = "+Constants.TypesOfUsers.TRAINER+"";
+			ResultSet rs = SQL.doSQL(query, connect);
+			while (rs.next()) {
+				String s = rs.getString("Gym");
+				String s1 = rs.getString("Name0");
 				trainers[length][0] = s1;
 				trainers[length][1] = s;
 				length++;
 				if (gyms.indexOf(s) == -1)
 					gyms.add(s);
 			}
+			query = "SELECT Name0 FROM `users` WHERE `Type` = "+Constants.TypesOfUsers.COURIER+"";
+			rs = SQL.doSQL(query, connect);
+			while (rs.next()) {
+				couriers.add(rs.getString("Name0"));
+			}
+			SQL.closeConnect(connect);
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}
 		JLabel lblGym = new JLabel("Зал");
-		lblGym.setBounds(20, 20, 100, 30);
-		lblGym.setFont(new Font("Arial", 1, 20));
+		lblGym.setBounds(x, y, 100, 30);
+		lblGym.setFont(Constants.GENERAL_LABEL_FONT);
 		JComboBox cmGym = new JComboBox(gyms.toArray());
 		JComboBox cmTrainer = new JComboBox();
 		ActionListener l = new ActionListener() {
@@ -245,56 +258,104 @@ public class Call  extends Main_Center_Panel {
 			}
 		};
 		l.actionPerformed(null);
-		cmGym.setBounds(20, 50, 115, 26);
+		cmGym.setBounds(x, y + 30, 115, 26);
 		cmGym.addActionListener(l);
 		JLabel lblTrainer = new JLabel("Тренер");
-		lblTrainer.setBounds(150, 20, 100, 30);
-		lblTrainer.setFont(new Font("Arial", 1, 20));
-		cmTrainer.setBounds(150, 50, 115, 26);
+		lblTrainer.setBounds(lblGym.getX() + 130, y, 100, 30);
+		lblTrainer.setFont(Constants.GENERAL_LABEL_FONT);
+		cmTrainer.setBounds(cmGym.getX() + 130, y + 30, 115, 26);
 		JLabel lblDate = new JLabel("Дата");
-		lblDate.setBounds(35, 90, 100, 30);
-		lblDate.setFont(new Font("Arial", 1, 20));
+		lblDate.setBounds(x + 15, y + 70 , 100, 30);
+		lblDate.setFont(Constants.GENERAL_LABEL_FONT);
 		DateTimePicker dateTimePicker = new DateTimePicker();
 		dateTimePicker.setFormats(DateFormat
 				.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM));
 		dateTimePicker
 				.setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
 		dateTimePicker.setDate(Calendar.getInstance().getTime());
-		dateTimePicker.setBounds(35, 120, 215, 26);
-		JButton btnOk = new JButton("OK");
-		btnOk.setBounds(105, 150, 75, 30);
+		dateTimePicker.setBounds(x + 15,lblDate.getY() +  30, 215, 26);
+		JLabel lblAddress = new JLabel("Адресс");
+		lblAddress.setFont(Constants.GENERAL_LABEL_FONT);
+		lblAddress.setBounds(lblGym.getX() + 265 , y, 100, 30);
+		JTextField txtAddress = new JTextField();
+		txtAddress.setBounds(cmGym.getX() + 265, y+30, 115, 26);
+		JLabel lblCourier = new JLabel("Курьер");
+		lblCourier.setFont(Constants.GENERAL_LABEL_FONT);
+		lblCourier.setBounds(lblTrainer.getX() + 265, y, 115, 26);
+		JComboBox cmCourier = new JComboBox<>(couriers.toArray());
+		cmCourier.setBounds(cmTrainer.getX() + 265, y+30, 115, 26);
+		JLabel lblDateDelivery = new JLabel("Доставка");
+		lblDateDelivery.setFont(Constants.GENERAL_LABEL_FONT);
+		lblDateDelivery.setBounds(lblDate.getX() + 265, y+70, 100, 30);
+		DateTimePicker dateTimePickerCourier = new DateTimePicker();
+		dateTimePickerCourier
+				.setFormats(DateFormat.getDateInstance(DateFormat.DATE_FIELD));
+		dateTimePickerCourier.setDate(Calendar.getInstance().getTime());
+		dateTimePickerCourier.setBounds(dateTimePicker.getX() + 265, y + 100, 215, 26);
+		btnOk.setBounds(262, 150, 75, 30);
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				new Thread()
-				{
-					public void run() 
-					{
+				new Thread() {
+					public void run() {
 						frameAddTrainer.setVisible(false);
-						int id = clients[selectedClient].getId();
+						int id = Common.currectCient.getId();
 						Connection connect = null;
 						try {
-
-							connect = DriverManager.getConnection(URL,main.Constants.connInfo);
+							connect = DriverManager.getConnection(URL,
+									main.Constants.connInfo);
 						} catch (SQLException e) {
-							System.out.println("Проблема БД. Call.java, Тренер");
+							System.out
+									.println("Проблема БД. Call.java, Тренер");
 							System.out.println(e.getMessage());
 						}
-						String query = "UPDATE `clients` SET `Gym` = '"
-								+ cmGym.getSelectedItem() + "', `Trainer` = '"
-								+ cmTrainer.getSelectedItem()
-								+ "', `Status` = 3 WHERE `id` = " + id;
-						SQL.doSQLWithoutResult(query, connect);
-						query = "INSERT INTO `dates` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
-								+ id + ", '" + cmTrainer.getSelectedItem() + "','2', '"
-								+ Common.getDateTime(dateTimePicker.getDate())
-								+ "', 0)";
-						SQL.doSQLWithoutResult(query, connect);
+						String query = "";
+						if(frameAddTrainer.getWidth() == 300) //Только пробную добавляем
+						{
+							query = "UPDATE `"+Constants.NamesOfTables.NUMBERS+"` SET `Gym` = '"
+									+ cmGym.getSelectedItem() + "', `Trainer` = '"
+									+ cmTrainer.getSelectedItem()
+									+ "', `Status` = "+Constants.TypesOfClient.TRIAL+" WHERE `id` = " + id;
+							SQL.doSQLWithoutResult(query, connect);
+							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
+									+ id + ", '" + cmTrainer.getSelectedItem()
+									+ "','"+Constants.TypesOfDates.TRIAL+"', '"
+									+ Common.getDateTime(dateTimePicker.getDate())
+									+ "', 0)";
+							SQL.doSQLWithoutResult(query, connect);
+						}
+						else //добавляем и пробную и доставку
+						{
+							query = "UPDATE `"+Constants.NamesOfTables.NUMBERS+"` SET `Gym` = '"
+									+ cmGym.getSelectedItem() + "', `Trainer` = '"
+									+ cmTrainer.getSelectedItem()
+									+ "', `Status` = "+Constants.TypesOfClient.TRIAL+", `Address`='"
+									+ txtAddress.getText() + "', `Courier` = '"
+									+ cmCourier.getSelectedItem()
+									+ "' WHERE `id` = " + id;
+							SQL.doSQLWithoutResult(query, connect);
+							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
+									+ id + ", '" + cmTrainer.getSelectedItem()
+									+ "','"+Constants.TypesOfDates.TRIAL+"', '"
+									+ Common.getDateTime(dateTimePicker.getDate())
+									+ "', 0)";
+							SQL.doSQLWithoutResult(query, connect);
+							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Courier`, `Type`, `Date`, `State`) VALUES ("
+									+ id + ", '" + cmCourier.getSelectedItem()
+									+ "','"+Constants.TypesOfDates.DELIVERY+"', '"
+									+ Common.getDateTime(
+											dateTimePickerCourier.getDate())
+									+ "', 0)";
+							SQL.doSQLWithoutResult(query, connect);
+						}
+						
 						SQL.closeConnect(connect);
+						clearSelection();
+						refreshTable();
+						Common.schedulePanel.clearSelection();
+						Common.schedulePanel.refreshTable();
 					};
 				}.start();
-				
-				
 			}
 		});
 		panelAddTrainer.add(lblDate);
@@ -304,27 +365,135 @@ public class Call  extends Main_Center_Panel {
 		panelAddTrainer.add(lblGym);
 		panelAddTrainer.add(cmGym);
 		panelAddTrainer.add(cmTrainer);
+		panelAddTrainer.add(lblAddress);
+		panelAddTrainer.add(lblCourier);
+		panelAddTrainer.add(lblDateDelivery);
+		panelAddTrainer.add(txtAddress);
+		panelAddTrainer.add(cmCourier);
+		panelAddTrainer.add(dateTimePickerCourier);
 		frameAddTrainer.add(panelAddTrainer);
 	}
-	public void initComponents() {
+	private void initAddDelivery()
+	{
+		frameAddDelivery.setSize(300, 240);
+		panelAddDelivery.setLayout(null);
+		length = 0;
+		Connection connect = null;
+		ArrayList<String> couriers = new ArrayList<String>();
+		try {
+			connect = DriverManager.getConnection(URL, main.Constants.connInfo);
+			String query;
+			ResultSet rs;
+			query = "SELECT Name0 FROM `users` WHERE `Type` = "+Constants.TypesOfUsers.COURIER+"";
+			rs = SQL.doSQL(query, connect);
+			while (rs.next()) {
+				couriers.add(rs.getString("Name0"));
+			}
+			SQL.closeConnect(connect);
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+		JLabel lblAddress = new JLabel("Адресс");
+		lblAddress.setFont(Constants.GENERAL_LABEL_FONT);
+		lblAddress.setBounds(x , y, 100, 30);
+		JTextField txtAddress = new JTextField();
+		txtAddress.setBounds(x, y+30, 115, 26);
+		JLabel lblCourier = new JLabel("Курьер");
+		lblCourier.setFont(Constants.GENERAL_LABEL_FONT);
+		lblCourier.setBounds(x + 130, y, 115, 26);
+		JComboBox cmCourier = new JComboBox<>(couriers.toArray());
+		cmCourier.setBounds(lblCourier.getX(), y+30, 115, 26);
+		JLabel lblDateDelivery = new JLabel("Доставка");
+		lblDateDelivery.setFont(Constants.GENERAL_LABEL_FONT);
+		lblDateDelivery.setBounds(x + 15, y+70, 100, 30);
+		DateTimePicker dateTimePickerCourier = new DateTimePicker();
+		dateTimePickerCourier
+				.setFormats(DateFormat.getDateInstance(DateFormat.DATE_FIELD));
+		dateTimePickerCourier.setDate(Calendar.getInstance().getTime());
+		dateTimePickerCourier.setBounds(lblDateDelivery.getX(), y + 100, 215, 26);
+		JButton btnOk = new JButton("ОК");
+		btnOk.setBounds(113, 150, 75, 30);
+		btnOk.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				new Thread() {
+					public void run() {
+						frameAddTrainer.setVisible(false);
+						int id = Common.currectCient.getId();
+						Connection connect = null;
+						try {
+							connect = DriverManager.getConnection(URL,
+									main.Constants.connInfo);
+						} catch (SQLException e) {
+							System.out
+									.println("Проблема БД. Call.java, Тренер");
+							System.out.println(e.getMessage());
+						}
+						String query = "";
+							query = "UPDATE `"+Constants.NamesOfTables.NUMBERS+"` SET `Status` = "+Constants.TypesOfClient.DELIVERY+", `Address`='"
+									+ txtAddress.getText() + "', `Courier` = '"
+									+ cmCourier.getSelectedItem()
+									+ "' WHERE `id` = " + id;
+							SQL.doSQLWithoutResult(query, connect);
+							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Courier`, `Type`, `Date`, `State`) VALUES ("
+									+ id + ", '" + cmCourier.getSelectedItem()
+									+ "','"+Constants.TypesOfDates.DELIVERY+"', '"
+									+ Common.getDateTime(
+											dateTimePickerCourier.getDate())
+									+ "', 0)";
+							SQL.doSQLWithoutResult(query, connect);
+						SQL.closeConnect(connect);
+						clearSelection();
+						refreshTable();
+						Common.schedulePanel.clearSelection();
+						Common.schedulePanel.refreshTable();
+					};
+				}.start();
+				frameAddDelivery.setVisible(false);
+			}
+		});
+		panelAddDelivery.add(lblAddress);
+		panelAddDelivery.add(btnOk);
+		panelAddDelivery.add(lblCourier);
+		panelAddDelivery.add(lblDateDelivery);
+		panelAddDelivery.add(txtAddress);
+		panelAddDelivery.add(cmCourier);
+		panelAddDelivery.add(dateTimePickerCourier);
+		frameAddDelivery.add(panelAddDelivery);
+	}
+public void initComponents() {
 		initAddCall();
 		initAddTrainer();
 		initNextCall();
+		initAddDelivery();
 	}
-	private void addCall() {
-		frameAdd.setVisible(true);
-	}
-	private void nextCall(int x, int y) {
-		if (clients[selectedClient].getNumberDates() + 1 > 2
+	public void nextCall(int x, int y) {
+		if (Common.currectCient.getNumberDates() + 1 > 2
 				&& JOptionPane.showConfirmDialog(null,
 						"Уже было три и более звонков, добавить этого лиента в слив?") == 0) {
-			Common.Sink(clients[selectedClient]);
+			if (Common.schedulePanel.isEnabled())
+				Common.Sink(Common.currectCient, Common.schedulePanel);
+			else
+				Common.Sink(Common.currectCient, Call.this);
 		} else {
 			frameNextCall.setVisible(true);
 			frameNextCall.setLocation(x, y);
 		}
 	}
-	private void addTrainer() {
+	
+	public void addDelivery()
+	{
+
+		frameAddDelivery.setVisible(true);
+	}
+	public void addTrainerAndDelivery() {
+		frameAddTrainer.setSize(600, 240);
+		btnOk.setLocation(262, 150);
+		frameAddTrainer.setVisible(true);
+	}
+	public void addTrainer() {
+		frameAddTrainer.setSize(300, 240);
+		btnOk.setLocation(113, 150);
 		frameAddTrainer.setVisible(true);
 	}
 	public void refreshTable() {
@@ -332,75 +501,77 @@ public class Call  extends Main_Center_Panel {
 		String queryClients, queryDates;
 		mod.getDataVector().clear();
 		try {
-			queryClients = "SELECT * FROM clients WHERE `Call`='"
+			connect1 = DriverManager.getConnection(URL, Constants.connInfo);
+			connect2 = DriverManager.getConnection(URL, Constants.connInfo);
+			queryClients = "SELECT * FROM "+Constants.NamesOfTables.NUMBERS+" WHERE `Call`='"
 					+ User.CurrentUser0 + "'";
-
-			connect1 = DriverManager.getConnection(URL,main.Constants.connInfo);
 			ResultSet rsClients = SQL.doSQL(queryClients, connect1);
 			rsClients.last();
 			int count = rsClients.getRow();
-			clients = new Client[count];
-			System.out.println(count);
+			clients.clear();
 			int i = 0;
 			ResultSet rsDates;
-			connect2 = DriverManager.getConnection(URL,main.Constants.connInfo);
 			if (rsClients.first())
 				do {
-					
-					clients[i] = new Client();
-					clients[i].setId(rsClients.getInt("id"));
-					clients[i].setCourier(rsClients.getString("Courier"));
-					clients[i].setTrainer(rsClients.getString("Trainer"));
-					clients[i].setGym(rsClients.getString("Gym"));
-					clients[i].setAccountSpam(rsClients.getString("Vk_Spam"));
-					clients[i].setName(rsClients.getString("Name_Client"));
-					clients[i].setNumber(rsClients.getString("Number"));
-					clients[i]
+					clients.add(new Client());
+					clients.get(i).setId(rsClients.getInt("id"));
+					clients.get(i).setCall(rsClients.getString("Call"));
+					clients.get(i).setCourier(rsClients.getString("Courier"));
+					clients.get(i).setTrainer(rsClients.getString("Trainer"));
+					clients.get(i).setGym(rsClients.getString("Gym"));
+					clients.get(i)
+							.setAccountSpam(rsClients.getString("Vk_Spam"));
+					clients.get(i).setName(rsClients.getString("Name_Client"));
+					clients.get(i).setNumber(rsClients.getString("Number"));
+					clients.get(i)
 							.setAccountClient(rsClients.getString("Vk_Client"));
-					clients[i].setDate(rsClients.getString("Date"));
-					clients[i].setAddress(rsClients.getString("Address"));
-					clients[i].setComment(rsClients.getString("Comment"));
-					clients[i].setStatus(rsClients.getInt("Status"));
-					queryDates = "SELECT * FROM `dates` WHERE `Client_id`="
+					clients.get(i).setDate(rsClients.getString("Date"));
+					clients.get(i).setAddress(rsClients.getString("Address"));
+					clients.get(i).setComment(rsClients.getString("Comment"));
+					clients.get(i).setStatus(rsClients.getInt("Status"));
+					queryDates = "SELECT * FROM `"+Constants.NamesOfTables.DATES+"` WHERE `Client_id`="
 							+ rsClients.getInt("id") + "  ORDER BY `Date`";
 					rsDates = SQL.doSQL(queryDates, connect2);
-					System.out.println("1");
 					if (rsDates.last()) {
-						clients[i].setNumberDates(rsDates.getInt("Number"));
-						clients[i].setDateCall(rsDates.getString("Date"));
+						clients.get(i).setNumberDates(rsDates.getInt("Number"));
+						clients.get(i).setLastDate(rsDates.getString("Date"));
 					}
 					i++;
 				} while (rsClients.next());
-
-			SQL.closeConnect(connect2);
 			if (i == 0) {
 				Vector<String> newRow = new Vector<String>();
 				mod.addRow(newRow);
 				mod.getDataVector().clear();
 			} else {
-				Arrays.sort(clients);
-				System.out.println(clients.toString());
+				Collections.sort(clients);
 				for (i = 0; i < count; i++) {
-					if (clients[i].getStatus() == 10)
+					if (clients.get(i).getStatus() == 10)
 						break;
 					Vector<String> newRow = new Vector<String>();
-					newRow.add(clients[i].getCourier());
-					newRow.add(clients[i].getTrainer());
-					newRow.add(clients[i].getGym());
-					newRow.add(clients[i].getAccountSpam());
-					newRow.add(clients[i].getName());
-					newRow.add(clients[i].getNumber());
-					newRow.add(clients[i].getAccountClient());
-					newRow.add(clients[i].getDate());
-					newRow.add(clients[i].getAddress());
-					newRow.add(clients[i].getComment());
-					newRow.add(Functions.getStatus(clients[i].getStatus()));
-					newRow.add((1 + clients[i].getNumberDates()) + "");
-					newRow.add(clients[i].getDateCall().substring(0, 10));
+					if (clients.get(i).getStatus() == 1
+							|| clients.get(i).getStatus() == 2)
+						newRow.add(
+								clients.get(i).getLastDate().substring(0, 10));
+					else
+						newRow.add("");
+					newRow.add(clients.get(i).getCourier());
+					newRow.add(clients.get(i).getTrainer());
+					newRow.add(clients.get(i).getGym());
+					newRow.add(clients.get(i).getAccountSpam());
+					newRow.add(clients.get(i).getName());
+					newRow.add(clients.get(i).getNumber());
+					newRow.add(clients.get(i).getAccountClient());
+					newRow.add(clients.get(i).getDate());
+					newRow.add(clients.get(i).getAddress());
+					newRow.add(clients.get(i).getComment());
+					newRow.add(Functions.getStatus(clients.get(i).getStatus()));
+					if (clients.get(i).getStatus() == Constants.TypesOfClient.CALL)
+						newRow.add((1 + clients.get(i).getNumberDates()) + "");
+					else
+						newRow.add("");
 					mod.addRow(newRow);
 				}
 			}
-			SQL.closeConnect(connect1);
 		} catch (SQLException e) {
 			System.out.println("Проблема с БД. Call.java");
 			System.out.println(e.getMessage());
@@ -410,20 +581,22 @@ public class Call  extends Main_Center_Panel {
 			table.setColumnSelectionInterval(column, column);
 			table.setRowSelectionInterval(row, row);
 		}
+		super.refreshTable();
 	}
 	public Call() {
-		new Thread(){
+		new Thread() {
 			@Override
 			public void run() {
 				super.run();
-				initComponents();				
+				initComponents();
 			}
 		}.start();
-		/*headerVect.clear();
+		headerVect.clear();
+		headerVect.add("Дата звонка");
 		headerVect.add("Доставщик");
 		headerVect.add("Тренер");
 		headerVect.add("Зал");
-		headerVect.add("Вк Спамщика");
+		headerVect.add("Вк аккаунта");
 		headerVect.add("Имя");
 		headerVect.add("Номер");
 		headerVect.add("Вк клиента");
@@ -432,32 +605,70 @@ public class Call  extends Main_Center_Panel {
 		headerVect.add("Комментарий");
 		headerVect.add("Статус");
 		headerVect.add("Номер звонка");
-		headerVect.add("Дата звонка");*/
-		//mod = new DefaultTableModel(headerVect, 0);
-		JPopupMenu popup = new JPopupMenu();
-		JMenuItem itemTrainer = new JMenuItem("Тренер");
-		popup.add(itemTrainer);
+		revalidate(headerVect);
+		JMenuItem itemTrainerAndDelivery = new JMenuItem("Доставка пробной");
+		Common.leftPanelCall.popup
+				.add(itemTrainerAndDelivery);
+		JMenuItem itemDelivery = new JMenuItem("Доставка");
+		Common.leftPanelCall.popup.add(itemDelivery);
+		JMenuItem itemTrainer = new JMenuItem("Пробная");
+		Common.leftPanelCall.popup.add(itemTrainer);
 		JMenuItem itemCall = new JMenuItem("Звонок");
-		popup.add(itemCall);
+		Common.leftPanelCall.popup.add(itemCall);
 		JMenuItem itemSink = new JMenuItem("Слив");
-		popup.add(itemSink);
+		Common.leftPanelCall.popup.add(itemSink);
+		itemDelivery.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				addDelivery();
+			}
+		});
 		itemCall.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				nextCall((int) (scrollPane.getMousePosition().getX()),
-						(int) (scrollPane.getMousePosition().getY()));
+				if (!Common.schedulePanel.isEnable()) {
+					nextCall((int) (scrollPane.getMousePosition().getX()),
+							(int) (scrollPane.getMousePosition().getY()));
+					Common.schedulePanel.table.clearSelection();
+				} else {
+					nextCall(
+							(int) (Common.schedulePanel.scrollPane
+									.getMousePosition().getX()),
+							(int) (Common.schedulePanel.scrollPane
+									.getMousePosition().getY()));
+					table.clearSelection();
+				}
+			}
+		});
+		itemTrainerAndDelivery.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				addTrainerAndDelivery();
+				if (Common.schedulePanel.isEnable()) {
+					Common.schedulePanel.table.clearSelection();
+				} else {
+					table.clearSelection();
+				}
 			}
 		});
 		itemTrainer.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
 				addTrainer();
+				if (Common.schedulePanel.isEnable()) {
+					Common.schedulePanel.table.clearSelection();
+				} else {
+					table.clearSelection();
+				}
 			}
 		});
 		itemSink.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Common.Sink(clients[selectedClient]);
+				if (Common.schedulePanel.isEnabled())
+					Common.Sink(Common.currectCient, Common.schedulePanel);
+				else
+					Common.Sink(Common.currectCient, Call.this);
 			}
 		});
 		table.addMouseListener(new MouseListener() {
@@ -473,14 +684,31 @@ public class Call  extends Main_Center_Panel {
 					table.setColumnSelectionInterval(column, column);
 					table.setRowSelectionInterval(row, row);
 					Point p = scrollPane.getMousePosition();
-					selectedClient = table.getSelectedRow();
-					popup.show(Call.this, (int) p.getX() + 1,
-							(int) p.getY() + 1);
+					Common.currectCient = clients.get(table.getSelectedRow());
+					if (Common.currectCient.getStatus() == Constants.TypesOfClient.CALL)
+					{
+						Common.leftPanelCall.popup.getComponent(0).setVisible(true);   //Доставка пробной
+						Common.leftPanelCall.popup.getComponent(1).setVisible(true);   //Доставка 
+						Common.leftPanelCall.popup.getComponent(2).setVisible(false);  //Пробная
+						Common.leftPanelCall.popup.show(
+								Call.this, (int) p.getX() + 1,
+								(int) p.getY() + 1);
+					}
+					else if (Common.currectCient.getStatus() == Constants.TypesOfClient.SUCCESSFUL_DELIVERY)
+					{	
+						Common.leftPanelCall.popup.getComponent(0).setVisible(false);   //Доставка пробной
+						Common.leftPanelCall.popup.getComponent(1).setVisible(false);   //Доставка 
+						Common.leftPanelCall.popup.getComponent(2).setVisible(true);  //Пробная
+						Common.leftPanelCall.popup.show(
+								Call.this, (int) p.getX() + 1,
+								(int) p.getY() + 1);
+					}
 				}
 				if (e.getClickCount() >= 2 && e.getClickCount() % 2 == 0) {
-					selectedClient = table.getSelectedRow();
-					nextCall((int) (scrollPane.getMousePosition().getX()),
-							(int) (scrollPane.getMousePosition().getY()));
+					Common.currectCient = clients.get(table.getSelectedRow());
+					if (Common.currectCient.getStatus() == Constants.TypesOfClient.CALL)
+						nextCall((int) (scrollPane.getMousePosition().getX()),
+								(int) (scrollPane.getMousePosition().getY()));
 				}
 			}
 			@Override
