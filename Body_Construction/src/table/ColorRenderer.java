@@ -8,6 +8,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
+
+import main.Constants;
 public class ColorRenderer extends JLabel implements TableCellRenderer {
 	public static final int BT = 2;
 	private static final int SBT = 1;
@@ -15,13 +17,24 @@ public class ColorRenderer extends JLabel implements TableCellRenderer {
 		setBorder(BorderFactory.createEmptyBorder(BT, BT, BT, BT));
 		setOpaque(true);
 	}
+	private boolean equals(String s, String s1) {
+		if (s.length() >= s1.length()
+				&& s.substring(s.length() - s1.length(), s.length()).equals(s1))
+		{
+
+			setText(s.substring(0, s.length()- s1.length()));
+			return true;
+		}
+		else
+			return false;
+	}
 	public Component getTableCellRendererComponent(JTable table, Object value,
 			boolean isSelected, boolean hasFocus, int row, int column) {
 		
 		String s = (String) value;
 		setHorizontalAlignment(CENTER);
 		if (s != null)
-			if (s.equals("Пробная")) {
+			if (s.equals("Пробная(А)") || s.equals("Пробная(П)") || s.equals("Пробная(Н)")) {
 				setBackground(Color.BLUE);
 				setForeground(Color.WHITE);
 			} else if (s.equals("Платная")) {
@@ -39,6 +52,9 @@ public class ColorRenderer extends JLabel implements TableCellRenderer {
 			} else if (s.equals("Назначить пробную")) {
 				setBackground(Color.MAGENTA);
 				setForeground(Color.WHITE);
+			} else if (s.equals("Расписание")) {
+				setBackground(Color.ORANGE);
+				setForeground(Color.BLACK);
 			} else if (s.equals("Слив")) {
 				setBackground(Color.RED);
 				setForeground(Color.WHITE);
@@ -48,7 +64,7 @@ public class ColorRenderer extends JLabel implements TableCellRenderer {
 					setForeground(Color.BLACK);
 			}
 		
-		if (s.length() >= 4
+		if (s!= null && s.length() >= 4
 				&& s.substring(s.length() - 4, s.length()).equals("time")) {
 			setBackground(Color.LIGHT_GRAY);
 			setText(s.substring(0, s.length() - 4));
@@ -62,6 +78,11 @@ public class ColorRenderer extends JLabel implements TableCellRenderer {
 			setBackground(Color.BLUE);
 			setForeground(Color.WHITE);
 			setText(s.substring(0, s.length() - 5));
+		} else if (s.length() >= 6
+				&& s.substring(s.length() - 6, s.length()).equals("client")) {
+			setBackground(Color.ORANGE);
+			setForeground(Color.BLACK);
+			setText(s.substring(0, s.length() - 6));
 		} else
 			setText(s);
 		if (isSelected) {
@@ -73,6 +94,28 @@ public class ColorRenderer extends JLabel implements TableCellRenderer {
 		} else {
 			setBorder(BorderFactory.createEmptyBorder());
 		}
+		
+		
+		if(equals(s, Constants.NameOfColors.RED)) 
+		{
+			setBackground(Color.RED);
+		}else
+			if(equals(s, Constants.NameOfColors.YELLOW)) 
+			{
+				setBackground(Color.YELLOW);
+			}else
+				if(equals(s, Constants.NameOfColors.GREEN)) 
+				{
+					setBackground(Color.GREEN);
+				}else
+					if(equals(s, Constants.NameOfColors.BLUE)) 
+					{
+						setBackground(Color.BLUE);
+					}else
+						if(equals(s, Constants.NameOfColors.WHITE)) 
+						{
+							setBackground(Color.WHITE);
+						}
 		return this;
 	}
 }

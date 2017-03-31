@@ -47,7 +47,7 @@ public class Trainer extends Main_Center_Panel{
 		try {
 			connect1 = DriverManager.getConnection(URL, Constants.connInfo);
 			connect2 = DriverManager.getConnection(URL, Constants.connInfo);
-			String query = "SELECT * FROM `clients` WHERE Trainer='"
+			String query = "SELECT * FROM `"+Constants.NamesOfTables.NUMBERS+"` WHERE Trainer='"
 					+ User.CurrentUser0 + "'",queryDates;
 			ResultSet rs = SQL.doSQL(query, connect1);
 			rs.last();
@@ -74,7 +74,7 @@ public class Trainer extends Main_Center_Panel{
 				clients.get(i).setComment(rs.getString("Comment"));
 				clients.get(i).setStatus(rs.getInt("Status"));
 				if (rsDates.last()) {
-					clients.get(i).setLastDate(rsDates.getString("Date"));
+					clients.get(i).setLastDate(rsDates.getString("Date"), rsDates.getInt("id"));
 				}
 				
 				i++;

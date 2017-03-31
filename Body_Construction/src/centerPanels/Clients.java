@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -33,7 +34,6 @@ import main.Functions;
 import main.SQL;
 import main.User;
 import panels.Common;
-import table.MainTableModel;
 public class Clients extends Main_Center_Panel { 
 	JFrame frameAdd = new JFrame("Добавить клиента");
 	JPanel panelAdd = new JPanel();
@@ -62,7 +62,7 @@ public class Clients extends Main_Center_Panel {
 		lblNumber.setLocation(10, 110);
 		lblNumber.setSize(200, 30);
 		panelAdd.add(lblNumber);
-		JTextField txtNumber = new JTextField();
+		JFormattedTextField txtNumber = new JFormattedTextField(Constants.NUMBER_MASK);
 		txtNumber.setLocation(10, 140);
 		txtNumber.setSize(200, 20);
 		panelAdd.add(txtNumber);
@@ -117,7 +117,7 @@ public class Clients extends Main_Center_Panel {
 							Connection connect = null;
 							connect = DriverManager.getConnection(URL, USER_NAME,
 									PASSWORD);
-							String query = "INSERT INTO `clients` (`Spam`, `Vk_Spam`, `Name_Client`, `Number`, `Vk_Client`, `Date`, `Comment`, `Status`)"
+							String query = "INSERT INTO `"+Constants.NamesOfTables.NUMBERS+"` (`Spam`, `Vk_Spam`, `Name_Client`, `Number`, `Vk_Client`, `Date`, `Comment`, `Status`)"
 									+ " values('" + User.CurrentUser0 + "', '"
 									+ txtAccountSpam.getText() + "', " + "'"
 									+ txtName.getText() + "', '" + txtNumber.getText()
@@ -125,7 +125,7 @@ public class Clients extends Main_Center_Panel {
 									+ " '" + Common.getDate(date) + "', " + "'"
 									+ txtComment.getText() + "', '"+Constants.TypesOfClient.SPAM+"')";
 							SQL.doSQLWithoutResult(query, connect);
-							query = "SELECT * FROM clients WHERE Number='"
+							query = "SELECT * FROM "+Constants.NamesOfTables.NUMBERS+" WHERE Number='"
 									+ txtNumber.getText() + "';";
 							ResultSet rs = SQL.doSQL(query, connect);
 							int id = -1;
@@ -134,7 +134,7 @@ public class Clients extends Main_Center_Panel {
 							}
 							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Type`, `Date`, `State`) "
 									+ "values(" + id + ",'"+Constants.TypesOfDates.CALL+"','"
-									+ Common.getDate(dateTimePicker.getDate())
+									+ Common.getDateTime(dateTimePicker.getDate())
 									+ "' ,0)";
 							SQL.doSQLWithoutResult(query, connect);
 							SQL.closeConnect(connect);
@@ -159,7 +159,7 @@ public class Clients extends Main_Center_Panel {
 		mod.getDataVector().clear();
 		try {
 			connect = DriverManager.getConnection(URL,Constants.connInfo);
-			String query = "SELECT * FROM `clients` WHERE `Spam`='"
+			String query = "SELECT * FROM `"+Constants.NamesOfTables.NUMBERS+"` WHERE `Spam`='"
 					+ User.CurrentUser0 + "'";
 			ResultSet rs = SQL.doSQL(query, connect);
 			rs.last();
@@ -170,6 +170,7 @@ public class Clients extends Main_Center_Panel {
 			if(count > 0)
 			do {
 					clients.add(new Client());
+					clients.get(i).setId(rs.getInt("id"));
 					clients.get(i).setSource(rs.getString("From"));
 					clients.get(i).setSpam(rs.getString("Spam"));
 					clients.get(i).setCall(rs.getString("Call"));
@@ -184,9 +185,9 @@ public class Clients extends Main_Center_Panel {
 					clients.get(i).setAddress(rs.getString("Address"));
 					clients.get(i).setComment(rs.getString("Comment"));
 					clients.get(i).setStatus(rs.getInt("Status"));
-					clients.get(i).setCost(rs.getInt("Cost"));
-					clients.get(i).setTypeOfTrain(rs.getInt("TypeOfTrain"));
-				i++;
+					clients.get(i).setClient(rs.getBoolean("IsClient"));
+					Functions.getClientInf(clients.get(i));
+					i++;
 			} while (rs.next());
 			if (i == 0) {
 				Vector<String> newRow = new Vector<String>();
@@ -202,6 +203,7 @@ public class Clients extends Main_Center_Panel {
 						break;
 
 					Vector<String> newRow = new Vector<String>();
+					newRow.add("" + (i + 1));
 					newRow.add(clients.get(i).getCall());
 					newRow.add(clients.get(i).getCourier());
 					newRow.add(clients.get(i).getTrainer());
@@ -214,7 +216,7 @@ public class Clients extends Main_Center_Panel {
 					newRow.add(clients.get(i).getAddress());
 					newRow.add(clients.get(i).getComment());
 					newRow.add(Functions.getStatus(clients.get(i).getStatus()));
-					if(clients.get(i).getCost() != -1)
+					if(clients.get(i).isClient())
 					{
 						newRow.add(""+clients.get(i).getCost());
 						newRow.add(Functions.getTypeOfTrain(clients.get(i).getTypeOfTrain()));

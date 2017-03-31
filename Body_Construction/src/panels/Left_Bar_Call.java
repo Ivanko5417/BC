@@ -52,10 +52,19 @@ public class Left_Bar_Call extends Left_Bar_Main{
 				
 			}
 		});
+		JButton btnStats = new JButton("Поиск");
+		btnStats.setAlignmentX(CENTER_ALIGNMENT);
+		btnStats.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Common.FindNumber();
+			}
+		});
 		btnCall.setForeground(new Color(169, 13, 221));
 		add(btnFreeCall);
 		add(btnTodayCall);
 		add(btnCall);
+		add(btnStats);
 		add(btnSink);
 		add(btnExit);
 	}

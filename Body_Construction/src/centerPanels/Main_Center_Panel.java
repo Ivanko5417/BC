@@ -1,5 +1,4 @@
 package centerPanels;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Toolkit;
@@ -19,17 +18,14 @@ import panels.Common;
 import table.ColorRenderer;
 import table.HeaderColorRenderer;
 import table.MainTableModel;
-
-public class Main_Center_Panel extends JPanel  {
+public class Main_Center_Panel extends JPanel {
 	Vector<String> headerVect = new Vector<String>();
 	protected JTable table;
 	protected JScrollPane scrollPane;
 	protected MainTableModel mod;
-	public void refreshTable()
-	{
+	public void refreshTable() {
 		table.revalidate();
 		table.repaint();
-		
 		mod.addTableModelListener(new TableModelListener() {
 			@Override
 			public void tableChanged(TableModelEvent e) {
@@ -37,25 +33,25 @@ public class Main_Center_Panel extends JPanel  {
 			}
 		});
 	}
-	public void revalidate(Vector<String> header)
-	{
-		mod = new MainTableModel(header);
-		table.setModel(mod);
-		for(int i = 0; i < mod.getColumnCount(); i++)
-		{
-			table.getColumn(mod.getColumnName(i)).setCellRenderer(new ColorRenderer());
-		}
-        table.getTableHeader().setDefaultRenderer(new HeaderColorRenderer());
-		
+	public void revalidate(Vector<String> header) {
+		revalidate(header, false);
 	}
-	public void clearSelection()
-	{
+	public void revalidate(Vector<String> header, boolean isCellEditable) {
+		mod = new MainTableModel(header, isCellEditable);
+		table.setModel(mod);
+		for (int i = 0; i < mod.getColumnCount(); i++) {
+			table.getColumn(mod.getColumnName(i))
+					.setCellRenderer(new ColorRenderer());
+		}
+		table.getTableHeader().setDefaultRenderer(new HeaderColorRenderer());
+	}
+	public void clearSelection() {
 		table.clearSelection();
 	}
-	public Main_Center_Panel()
-	{
+	public Main_Center_Panel() {
 		setBackground(Color.WHITE);
 		setLayout(new BorderLayout());
+		headerVect.add("Номер");
 		headerVect.add("Звонильщик");
 		headerVect.add("Доставщик");
 		headerVect.add("Тренер");
@@ -70,13 +66,7 @@ public class Main_Center_Panel extends JPanel  {
 		headerVect.add("Статус");
 		headerVect.add("Цена");
 		headerVect.add("Тип");
-		table = new JTable() {
-			@Override
-			public boolean isCellEditable(int row, int column) {
-				return false;
-			}
-		};
-
+		table = new JTable();
 		table.addKeyListener(new KeyListener() {
 			@Override
 			public void keyTyped(KeyEvent e) {
@@ -85,12 +75,13 @@ public class Main_Center_Panel extends JPanel  {
 			public void keyReleased(KeyEvent e) {
 			}
 			public void keyPressed(KeyEvent e) {
-				if(e.getKeyCode() == 67)
-				{ 
-					if(table.getSelectedRow() != -1 && table.getSelectedRow() != -1)
-					{
-						String s = Common.clients.get(table.getSelectedRow()).get(table.getSelectedColumn());
-					    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(s), null);
+				if (e.getKeyCode() == 67) {
+					if (table.getSelectedRow() != -1
+							&& table.getSelectedRow() != -1) {
+						String s = Common.clients.get(table.getSelectedRow())
+								.get(table.getSelectedColumn());
+						Toolkit.getDefaultToolkit().getSystemClipboard()
+								.setContents(new StringSelection(s), null);
 					}
 					System.out.println("asd");
 					System.out.println(table.getSelectedColumn());
@@ -103,5 +94,4 @@ public class Main_Center_Panel extends JPanel  {
 				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		add(scrollPane, BorderLayout.CENTER);
 	}
-	
 }

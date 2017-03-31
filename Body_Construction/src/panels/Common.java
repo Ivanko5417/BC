@@ -14,6 +14,7 @@ import java.util.Date;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import centerPanels.AdminClients;
 import centerPanels.Call;
 import centerPanels.Clients;
 import centerPanels.FreeCall;
@@ -24,9 +25,13 @@ import centerPanels.Settings;
 import centerPanels.Sink;
 import centerPanels.Start_Center_Bar;
 import centerPanels.Trainer;
+import centerPanels.Users;
+import frames.FindNumber;
+import frames.addClient;
 import main.Client;
 import main.Constants;
 import main.Constants.TypesOfUsers;
+import main.Functions;
 import main.SQL;
 import main.User;
 public class Common extends JPanel {
@@ -34,6 +39,7 @@ public class Common extends JPanel {
 	static public Left_Bar_Call leftPanelCall;
 	static public Left_Bar_Trainer leftPanelTrainer;
 	static public Left_Bar_Courier leftPanelCourier;
+	static public Left_Bar_Admin leftPanelAdmin;
 	static public Start_Center_Bar centerPanel;
 	static public Schedule schedulePanel;
 	static public ScheduleWeek scheduleWeekPanel;
@@ -41,9 +47,13 @@ public class Common extends JPanel {
 	static public Clients clinetsPanel;
 	static public FreeCall callfreePanel;
 	static public Call callPanel;
+	static public FindNumber findNumberPanel;
 	static public Sink sinkPanel;
+	static public AdminClients adminClientsPanel;
+	static public Users usersPanel;
 	static public Settings settingsPanel;
-	static public Client currectCient = null;
+	static public addClient addCl;
+	static public Client currectNumber = null;
 	static public ArrayList<Client> clients = new ArrayList<Client>();
 	static void setPanels(JPanel leftPanel, JPanel centerPanel) {
 		schedulePanel.setEnable(false);
@@ -60,19 +70,21 @@ public class Common extends JPanel {
 		}.start();
 	}
 	static void setCommonPanels(JPanel centerPanel) {
-		switch (User.Type) {
+		switch (User.CurrentType) {
 			case Constants.TypesOfUsers.SPAM :
 				setPanels(leftPanelSpam, centerPanel);
 				break;
 			case Constants.TypesOfUsers.CALL :
 				setPanels(leftPanelCall, centerPanel);
 				break;
-
 			case Constants.TypesOfUsers.COURIER :
 				setPanels(leftPanelCourier, centerPanel);
 				break;
 			case Constants.TypesOfUsers.TRAINER :
 				setPanels(leftPanelTrainer, centerPanel);
+				break;
+			case Constants.TypesOfUsers.ADMIN :
+				setPanels(leftPanelAdmin, centerPanel);
 				break;
 		}
 	}
@@ -81,7 +93,7 @@ public class Common extends JPanel {
 			@Override
 			public void run() {
 				super.run();
-				switch (User.Type) {
+				switch (User.CurrentType) {
 					case Constants.TypesOfUsers.CALL :
 						setPanels(leftPanelCall, schedulePanel);
 						break;
@@ -101,8 +113,16 @@ public class Common extends JPanel {
 			@Override
 			public void run() {
 				super.run();
-				setPanels(leftPanelTrainer, scheduleWeekPanel);
-				scheduleWeekPanel.refreshTable();
+				switch (User.CurrentType) {
+					case Constants.TypesOfUsers.ADMIN :
+						setPanels(leftPanelAdmin, scheduleWeekPanel);
+						scheduleWeekPanel.refreshTable();
+						break;
+					default :
+						setPanels(leftPanelTrainer, scheduleWeekPanel);
+						scheduleWeekPanel.refreshTable();
+						break;
+				}
 			}
 		}.start();
 	}
@@ -146,6 +166,26 @@ public class Common extends JPanel {
 			}
 		}.start();
 	}
+	static void setAdminClients() {
+		new Thread() {
+			@Override
+			public void run() {
+				super.run();
+				setPanels(leftPanelAdmin, adminClientsPanel);
+				adminClientsPanel.refreshTable();
+			}
+		}.start();
+	}
+	static void setUsers() {
+		new Thread() {
+			@Override
+			public void run() {
+				super.run();
+				setPanels(leftPanelAdmin, usersPanel);
+				usersPanel.refreshTable();
+			}
+		}.start();
+	}
 	static void setSettings() {
 		setCommonPanels(settingsPanel);
 	}
@@ -158,6 +198,10 @@ public class Common extends JPanel {
 				sinkPanel.refreshTable();
 			}
 		}.start();
+	}
+	static void FindNumber() {
+		findNumberPanel.setVisible(true);
+		
 	}
 	static public String getDate(Date d) {
 		return "" + (2000 + d.getYear() % 100) + "." + (d.getMonth() + 1) + "."
@@ -194,13 +238,17 @@ public class Common extends JPanel {
 					connect = DriverManager.getConnection(URL, USER_NAME,
 							PASSWORD);
 				} catch (SQLException e) {
-					System.out.println("Проблема с БД. Call.java, Слив");
+					System.out.println("Проблема с БД. Common.java, Слив");
 				}
+				Functions.setDateState(connect, c.getLastDateId(),
+						Constants.StatesOfDates.UNSUCCESSFUL);
 				String comment = JOptionPane.showInputDialog(null,
 						"Введите причину слива");
 				if (comment != null) {
-					String query = "UPDATE `clients` SET `Status` = "+Constants.TypesOfClient.SINK+", `Comment` = '"
-							+ comment + "' WHERE `id` = " + id + "";
+					String query = "UPDATE `" + Constants.NamesOfTables.NUMBERS
+							+ "` SET `Status` = " + Constants.TypesOfClient.SINK
+							+ ", `Comment` = '" + comment + "' WHERE `id` = "
+							+ id + "";
 					SQL.doSQLWithoutResult(query, connect);
 					SQL.closeConnect(connect);
 				}
@@ -212,18 +260,23 @@ public class Common extends JPanel {
 	public Common(int type) {
 		setLayout(new BorderLayout());
 		leftPanelSpam = new Left_Bar_Spam();
+		findNumberPanel = new FindNumber();
 		leftPanelCall = new Left_Bar_Call();
 		leftPanelTrainer = new Left_Bar_Trainer();
 		leftPanelCourier = new Left_Bar_Courier();
+		leftPanelAdmin = new Left_Bar_Admin();
 		centerPanel = new Start_Center_Bar();
 		clinetsPanel = new Clients();
 		callfreePanel = new FreeCall();
+		adminClientsPanel = new AdminClients();
+		usersPanel = new Users();
 		callPanel = new Call();
 		schedulePanel = new Schedule();
 		scheduleWeekPanel = new ScheduleWeek();
 		clientsTrainerPanel = new Trainer();
 		settingsPanel = new Settings();
 		sinkPanel = new Sink();
+		addCl = new addClient();
 		switch (type) {
 			case TypesOfUsers.SPAM :
 				add(leftPanelSpam, BorderLayout.WEST);
@@ -236,6 +289,10 @@ public class Common extends JPanel {
 				break;
 			case TypesOfUsers.TRAINER :
 				add(leftPanelTrainer, BorderLayout.WEST);
+				break;
+			case TypesOfUsers.ADMIN :
+				add(leftPanelAdmin, BorderLayout.WEST);
+				break;
 			default :
 				break;
 		}

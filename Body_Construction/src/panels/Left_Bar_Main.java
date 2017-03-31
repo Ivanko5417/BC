@@ -14,7 +14,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import main.Functions;
 import main.Main;
+import main.User;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -38,11 +40,16 @@ public class Left_Bar_Main extends JPanel {
 	{
 		setBackground(new Color(91, 57, 38));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		JLabel lblMenu = new JLabel("Μενώ");
+		JLabel lblMenu = new JLabel(""+User.CurrentUser0);
 		lblMenu.setFont(new Font("Arial", 1, 25));
 		lblMenu.setForeground(new Color(168, 118, 201));
 		lblMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
 		add(lblMenu);
+		JLabel lblType = new JLabel(""+Functions.getTypeOfUser(User.CurrentType));
+		lblType.setFont(new Font("Arial", 1, 25));
+		lblType.setForeground(new Color(168, 118, 201));
+		lblType.setAlignmentX(Component.CENTER_ALIGNMENT);
+		add(lblType);
 		add(javax.swing.Box.createRigidArea(new Dimension(0, 25)));
 		btnSettings.addActionListener(new ActionListener() {
 			@Override

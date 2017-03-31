@@ -1,8 +1,11 @@
 package panels;
 import static main.Constants.URL;
 import static main.Constants.connInfo;
+
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
@@ -26,6 +29,7 @@ import javax.swing.JTextField;
 import centerPanels.Call;
 import main.Constants;
 import main.DateTimePicker;
+import main.Functions;
 import main.SQL;
 import main.User;
 public class Left_Bar_Courier extends Left_Bar_Main {
@@ -34,10 +38,12 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 	private JPanel panelNextDelivery = new JPanel();
 	private JFrame frameAddTrainer = new JFrame("Пробная");
 	private JPanel panelAddTrainer = new JPanel();
+	private JFrame frameWhatWasDelivered = new JFrame("Что доставлено?");
+	private JPanel panelWhatWasDelivered = new JPanel();
 	private int x = 20, y = 20;
 	private int length;
 	private void initAddTrainer() {
-		frameAddTrainer.setSize(600, 240);
+		frameAddTrainer.setSize(300, 240);
 		panelAddTrainer.setLayout(null);
 		length = 0;
 		Connection connect = null;
@@ -45,7 +51,7 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 		String[][] trainers = new String[50][2];
 		try {
 			connect = DriverManager.getConnection(URL, main.Constants.connInfo);
-			String query = "SELECT * FROM `users` WHERE `Type` = "
+			String query = "SELECT * FROM `"+Constants.NamesOfTables.USERS+"` WHERE `Type` = "
 					+ Constants.TypesOfUsers.TRAINER;
 			ResultSet rs = SQL.doSQL(query, connect);
 			while (rs.next()) {
@@ -95,38 +101,39 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 		dateTimePicker.setDate(Calendar.getInstance().getTime());
 		dateTimePicker.setBounds(x + 15, lblDate.getY() + 30, 215, 26);
 		JButton btnOk = new JButton("ОК");
-		btnOk.setBounds(262, 150, 75, 30);
+		btnOk.setBounds(113, 150, 75, 30);
 		btnOk.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				new Thread() {
 					public void run() {
 						frameAddTrainer.setVisible(false);
-						int id = Common.currectCient.getId();
+						int id = Common.currectNumber.getId();
 						Connection connect = null;
 						try {
 							connect = DriverManager.getConnection(URL,
 									main.Constants.connInfo);
 						} catch (SQLException e) {
-							System.out
-									.println("Проблема БД. Call.java, Тренер");
+							System.out.println(
+									"Проблема БД. Left_Bar_Courier.java, Тренер");
 							System.out.println(e.getMessage());
 						}
 						String query = "";
 						// пробную добавляем
-						query = "UPDATE `clients` SET `Gym` = '"
+						query = "UPDATE `"+Constants.NamesOfTables.NUMBERS+"` SET `Gym` = '"
 								+ cmGym.getSelectedItem() + "', `Trainer` = '"
-								+ cmTrainer.getSelectedItem() + "', `Status` = "
-								+ Constants.TypesOfClient.TRIAL
-								+ " WHERE `id` = " + id;
+								+ cmTrainer.getSelectedItem()
+								+ "' WHERE `id` = " + id;
 						SQL.doSQLWithoutResult(query, connect);
-						query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
+						query = "INSERT INTO `" + Constants.NamesOfTables.DATES
+								+ "` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
 								+ id + ", '" + cmTrainer.getSelectedItem()
 								+ "','" + Constants.TypesOfDates.TRIAL + "', '"
 								+ Common.getDateTime(dateTimePicker.getDate())
 								+ "', 0)";
 						SQL.doSQLWithoutResult(query, connect);
 						SQL.closeConnect(connect);
+						whatWasDelivered();
 						Common.schedulePanel.clearSelection();
 						Common.schedulePanel.refreshTable();
 					};
@@ -142,7 +149,7 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 		panelAddTrainer.add(cmTrainer);
 		frameAddTrainer.add(panelAddTrainer);
 	}
-	private void initNextCall() {
+	private void initNextDelivery() {
 		frameNextDelivery.setSize(162, 150);
 		frameNextDelivery.setResizable(false);
 		panelNextDelivery.setLayout(null);
@@ -163,8 +170,8 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 			public void actionPerformed(ActionEvent e) {
 				new Thread() {
 					public void run() {
-						Common.currectCient.setNumberDates(
-								Common.currectCient.getNumberDates() + 1);
+						Common.currectNumber.setNumberDates(
+								Common.currectNumber.getNumberDates() + 1);
 						Connection connect = null;
 						try {
 							connect = DriverManager.getConnection(URL,
@@ -173,19 +180,20 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 							System.out.println(
 									"Проблема с БД. Scheldule.Java, nextDelivery");
 						}
-						int id = Common.currectCient.getId();
-						String dateQuery = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Courier`,`Type`,`Number`, `Date`, `State`)"
+						int id = Common.currectNumber.getId();
+
+						Functions.setDateState(connect, Common.currectNumber.getLastDateId(), Constants.StatesOfDates.SHIFT);
+						String dateQuery = "INSERT INTO `"
+								+ Constants.NamesOfTables.DATES
+								+ "` (`Client_id`, `Courier`,`Type`,`Number`, `Date`, `State`)"
 								+ "VALUES (" + id + ", '" + User.CurrentUser0
 								+ "', " + Constants.TypesOfDates.DELIVERY + ", "
-								+ Common.currectCient.getNumberDates() + ", '"
+								+ Common.currectNumber.getNumberDates() + ", '"
 								+ Common.getDate(dateTimePicker.getDate())
 								+ "', '0') ";
 						SQL.doSQLWithoutResult(dateQuery, connect);
-						dateQuery = "UPDATE `"+Constants.NamesOfTables.DATES+"` SET `Type` = "
-								+ Constants.TypesOfDates.SUCCESSFUL_DELIVERY
-								+ " WHERE `id` = "
-								+ Common.currectCient.getLastDateId();
-						SQL.doSQLWithoutResult(dateQuery, connect);
+
+						Functions.setDateState(connect, Common.currectNumber.getLastDateId(), Constants.StatesOfDates.SUCCESSFUL);
 						SQL.closeConnect(connect);
 						frameNextDelivery.setVisible(false);
 						Common.schedulePanel.clearSelection();
@@ -204,16 +212,97 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 	}
 	private void initComponents() {
 		initAddTrainer();
-		initNextCall();
+		initNextDelivery();
+		initWhatWasDelivered();
+	}
+	private void initWhatWasDelivered() {
+		frameWhatWasDelivered.setSize(390, 120);
+		panelWhatWasDelivered.setLayout(null);
+		JButton btnPass = new JButton("Абонемент");
+		JButton btnTrial = new JButton("Пробная");
+		JButton btnNothing = new JButton("Ничего");
+		btnPass.setSize(100, 50);
+		btnTrial.setSize(100, 50);
+		btnNothing.setSize(100, 50);
+		btnPass.setLocation(20, 20);
+		btnTrial.setLocation(140, 20);
+		btnNothing.setLocation(260, 20);
+		btnPass.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					connect = DriverManager.getConnection(URL, connInfo);
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+				String query = "UPDATE `" + Constants.NamesOfTables.NUMBERS
+						+ "` SET `Status` = "
+						+ Constants.TypesOfClient.TRIAL_PASS + " WHERE `id` = "
+						+ Common.currectNumber.getId();
+				Common.currectNumber
+						.setStatus(Constants.TypesOfClient.TRIAL_PASS);
+				SQL.doSQLWithoutResult(query, connect);
+				SQL.closeConnect(connect);
+				frameWhatWasDelivered.setVisible(false);
+				JOptionPane.showMessageDialog(null, "ОК");
+			}
+		});
+		btnTrial.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					connect = DriverManager.getConnection(URL, connInfo);
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+				String query = "UPDATE `" + Constants.NamesOfTables.NUMBERS
+						+ "` SET `Status` = "
+						+ Constants.TypesOfClient.TRIAL_TRIAL + " WHERE `id` = "
+						+ Common.currectNumber.getId();
+				Common.currectNumber
+						.setStatus(Constants.TypesOfClient.TRIAL_TRIAL);
+				SQL.doSQLWithoutResult(query, connect);
+				SQL.closeConnect(connect);
+				frameWhatWasDelivered.setVisible(false);
+				JOptionPane.showMessageDialog(null, "ОК");
+			}
+		});
+		btnNothing.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					connect = DriverManager.getConnection(URL, connInfo);
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+				String query = "UPDATE `" + Constants.NamesOfTables.NUMBERS
+						+ "` SET `Status` = "
+						+ Constants.TypesOfClient.TRIAL_NOTHING
+						+ " WHERE `id` = " + Common.currectNumber.getId();
+				Common.currectNumber
+						.setStatus(Constants.TypesOfClient.TRIAL_NOTHING);
+				SQL.doSQLWithoutResult(query, connect);
+				SQL.closeConnect(connect);
+				frameWhatWasDelivered.setVisible(false);
+				JOptionPane.showMessageDialog(null, "ОК");
+			}
+		});
+		panelWhatWasDelivered.add(btnPass);
+		panelWhatWasDelivered.add(btnTrial);
+		panelWhatWasDelivered.add(btnNothing);
+		frameWhatWasDelivered.add(panelWhatWasDelivered);
 	}
 	private void nextDelivery() {
-		if (Common.currectCient.getNumberDates() + 1 > 2
+		if (Common.currectNumber.getNumberDates() + 1 > 2
 				&& JOptionPane.showConfirmDialog(null,
 						"Уже было три и более звонков, добавить этого лиента в слив?") == 0) {
-			Common.Sink(Common.currectCient, Common.schedulePanel);
+			Common.Sink(Common.currectNumber, Common.schedulePanel);
 		} else {
 			frameNextDelivery.setVisible(true);
 		}
+	}
+	private void whatWasDelivered() {
+		frameWhatWasDelivered.setVisible(true);
 	}
 	public Left_Bar_Courier() {
 		initComponents();
@@ -223,53 +312,25 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 		itemDelivery.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				System.out.println(Common.currectCient.getStatus());
-				if (Common.currectCient.getStatus() == 3) {
-					try {
-						connect = DriverManager.getConnection(URL, connInfo);
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-					String query = "UPDATE `"+Constants.NamesOfTables.DATES+"` SET `Type` = "
-							+ Constants.TypesOfDates.SUCCESSFUL_DELIVERY
-							+ " WHERE `id` = "
-							+ Common.currectCient.getLastDateId();
-					SQL.doSQLWithoutResult(query, connect);
-					SQL.closeConnect(connect);
+				try {
+					connect = DriverManager.getConnection(URL, connInfo);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				Functions.setDateState(connect, Common.currectNumber.getLastDateId(), Constants.StatesOfDates.SUCCESSFUL);
+				if (Common.currectNumber
+						.getStatus() == Constants.TypesOfClient.DELIVERY_AND_TRIAL) {
 					Common.schedulePanel.clearSelection();
 					Common.schedulePanel.refreshTable();
-					JOptionPane.showMessageDialog(null, "ОК");
-				} else if (Common.currectCient
+					whatWasDelivered();
+				} else if (Common.currectNumber
 						.getStatus() == Constants.TypesOfClient.DELIVERY) {
-					try {
-						connect = DriverManager.getConnection(URL, connInfo);
-					} catch (SQLException e1) {
-						e1.printStackTrace();
-					}
-					String query = "UPDATE `"+Constants.NamesOfTables.DATES+"` SET `Type` = "
-							+ Constants.TypesOfDates.SUCCESSFUL_DELIVERY
-							+ " WHERE `id` = "
-							+ Common.currectCient.getLastDateId();
-					SQL.doSQLWithoutResult(query, connect);
-					query = "UPDATE `clients` SET `Status` = "
-							+ Constants.TypesOfClient.SUCCESSFUL_DELIVERY
-							+ " WHERE `id` = " + Common.currectCient.getId();
-					SQL.doSQLWithoutResult(query, connect);
-					SQL.closeConnect(connect);
-					Common.schedulePanel.clearSelection();
-					Common.schedulePanel.refreshTable();
-					JOptionPane.showMessageDialog(null, "ОК");
+					addTrainer();
 				}
 			}
 		});
 		JMenuItem itemTrainer = new JMenuItem("Пробная");
-		popup.add(itemTrainer);
-		itemTrainer.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-			}
-		});
+		//popup.add(itemTrainer);
 		itemTrainer.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -293,13 +354,10 @@ public class Left_Bar_Courier extends Left_Bar_Main {
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
-				String query = "UPDATE `"+Constants.NamesOfTables.DATES+"` SET `Type` = "
-						+ Constants.TypesOfDates.UNSUCCESSFUL_DELIVERY
-						+ " WHERE `id` = "
-						+ Common.currectCient.getLastDateId();
-				SQL.doSQLWithoutResult(query, connect);
+
+				Functions.setDateState(connect, Common.currectNumber.getLastDateId(), Constants.StatesOfDates.UNSUCCESSFUL);
 				SQL.closeConnect(connect);
-				Common.Sink(Common.currectCient, Common.schedulePanel);
+				Common.Sink(Common.currectNumber, Common.schedulePanel);
 			}
 		});
 		popup.add(itemSink);

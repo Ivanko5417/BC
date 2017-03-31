@@ -21,6 +21,7 @@ import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -74,7 +75,7 @@ public class Call extends Main_Center_Panel {
 		lblNumber.setLocation(10, 60);
 		lblNumber.setSize(200, 30);
 		panelAdd.add(lblNumber);
-		JTextField txtNumber = new JTextField();
+		JFormattedTextField txtNumber = new JFormattedTextField(Constants.NUMBER_MASK);
 		txtNumber.setLocation(10, 90);
 		txtNumber.setSize(200, 20);
 		panelAdd.add(txtNumber);
@@ -90,10 +91,14 @@ public class Call extends Main_Center_Panel {
 		lblDate.setLocation(10, 160);
 		lblDate.setSize(200, 30);
 		panelAdd.add(lblDate);
-		JTextField txtDate = new JTextField();
-		txtDate.setLocation(10, 190);
-		txtDate.setSize(200, 20);
-		panelAdd.add(txtDate);
+		DateTimePicker dateTimePicker = new DateTimePicker();
+		dateTimePicker.setFormats(DateFormat
+				.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM));
+		dateTimePicker
+				.setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
+		dateTimePicker.setDate(Calendar.getInstance().getTime());
+		dateTimePicker.setBounds(10, 190, 200, 20);
+		panelAdd.add(dateTimePicker);
 		JLabel lblComment = new JLabel("Комментарий");
 		lblComment.setLocation(10, 210);
 		lblComment.setSize(200, 30);
@@ -101,7 +106,7 @@ public class Call extends Main_Center_Panel {
 		JTextArea txtComment = new JTextArea();
 		txtComment.setLineWrap(true);
 		txtComment.setWrapStyleWord(true);
-		txtComment.setBorder(txtDate.getBorder());
+		txtComment.setBorder(txtName.getBorder());
 		JScrollPane scrollComment = new JScrollPane(txtComment);
 		scrollComment.setVerticalScrollBarPolicy(
 				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -122,7 +127,9 @@ public class Call extends Main_Center_Panel {
 							Connection connect = null;
 							connect = DriverManager.getConnection(URL,
 									main.Constants.connInfo);
-							String query = "INSERT INTO `"+Constants.NamesOfTables.NUMBERS+"` (From, Name_Client, Number,Call, Date, Comment, Status)"
+							String query = "INSERT INTO `"
+									+ Constants.NamesOfTables.NUMBERS
+									+ "` (`From`, `Name_Client`, `Number`,`Call`, `Date`, `Comment`, `Status`)"
 									+ " values('" + cmFrom.getSelectedItem()
 									+ "'," + "'" + txtName.getText() + "', '"
 									+ txtNumber.getText() + "','"
@@ -130,18 +137,23 @@ public class Call extends Main_Center_Panel {
 									+ (date.getYear() % 100) + "."
 									+ (date.getMonth() + 1) + "."
 									+ date.getDate() + "', " + "'"
-									+ txtComment.getText() + "', '"+Constants.TypesOfClient.CALL+"')";
+									+ txtComment.getText() + "', '"
+									+ Constants.TypesOfClient.CALL + "')";
 							SQL.doSQLWithoutResult(query, connect);
-							query = "SELECT * FROM `"+Constants.NamesOfTables.NUMBERS+"` WHERE Number='"
-									+ txtNumber.getText() + "';";
+							query = "SELECT * FROM `"
+									+ Constants.NamesOfTables.NUMBERS
+									+ "` WHERE Number='" + txtNumber.getText()
+									+ "';";
 							ResultSet rs = SQL.doSQL(query, connect);
 							int id = -1;
 							while (rs.next()) {
 								id = rs.getInt("id");
 							}
-							query = "INSERT INTO "+Constants.NamesOfTables.DATES+" (Client_id, Value, Date, State) "
-									+ "values(" + id + ",'Зв1','"
-									+ txtDate.getText() + "' ,0)";
+							query = "INSERT INTO `"
+									+ Constants.NamesOfTables.DATES
+									+ "` (`Client_id`, `Date`,`Type` ) "
+									+ "values(" + id + ",'"
+									+ Common.getDateTime(dateTimePicker.getDate()) + "' ,"+Constants.TypesOfDates.CALL+")";
 							SQL.doSQLWithoutResult(query, connect);
 							SQL.closeConnect(connect);
 							refreshTable();
@@ -178,8 +190,8 @@ public class Call extends Main_Center_Panel {
 			public void actionPerformed(ActionEvent e) {
 				new Thread() {
 					public void run() {
-						Common.currectCient.setNumberDates(
-								Common.currectCient.getNumberDates() + 1);
+						Common.currectNumber.setNumberDates(
+								Common.currectNumber.getNumberDates() + 1);
 						Connection connect = null;
 						try {
 							connect = DriverManager.getConnection(URL,
@@ -188,13 +200,17 @@ public class Call extends Main_Center_Panel {
 							System.out.println(
 									"Проблема с БД. Call.Java, nextCall");
 						}
-						int id = Common.currectCient.getId();
-						String dateQuery = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Call`,`Type`,`Number`, `Date`, `State`)"
+						int id = Common.currectNumber.getId();
+
+						Functions.setDateState(connect, Common.currectNumber.getLastDateId(), Constants.StatesOfDates.SHIFT);
+						String dateQuery = "INSERT INTO `"
+								+ Constants.NamesOfTables.DATES
+								+ "` (`Client_id`, `Call`,`Type`,`Number`, `Date`, `State`)"
 								+ "VALUES (" + id + ", '" + User.CurrentUser0
 								+ "', " + "0" + ", "
-								+ Common.currectCient.getNumberDates() + ", '"
-								+ Common.getDate(dateTimePicker.getDate())
-								+ "', '"+Constants.TypesOfDates.CALL+"') ";
+								+ Common.currectNumber.getNumberDates() + ", '"
+								+ Common.getDateTime(dateTimePicker.getDate())
+								+ "', '" + Constants.TypesOfDates.CALL + "') ";
 						SQL.doSQLWithoutResult(dateQuery, connect);
 						SQL.closeConnect(connect);
 						frameNextCall.setVisible(false);
@@ -211,6 +227,7 @@ public class Call extends Main_Center_Panel {
 		panelNextCall.add(btnOk);
 		frameNextCall.add(panelNextCall);
 	}
+	
 	private void initAddTrainer() {
 		frameAddTrainer.setSize(600, 240);
 		panelAddTrainer.setLayout(null);
@@ -221,7 +238,8 @@ public class Call extends Main_Center_Panel {
 		String[][] trainers = new String[50][2];
 		try {
 			connect = DriverManager.getConnection(URL, main.Constants.connInfo);
-			String query = "SELECT * FROM `users` WHERE `Type` = "+Constants.TypesOfUsers.TRAINER+"";
+			String query = "SELECT * FROM `users` WHERE `Type` = "
+					+ Constants.TypesOfUsers.TRAINER + "";
 			ResultSet rs = SQL.doSQL(query, connect);
 			while (rs.next()) {
 				String s = rs.getString("Gym");
@@ -232,7 +250,8 @@ public class Call extends Main_Center_Panel {
 				if (gyms.indexOf(s) == -1)
 					gyms.add(s);
 			}
-			query = "SELECT Name0 FROM `users` WHERE `Type` = "+Constants.TypesOfUsers.COURIER+"";
+			query = "SELECT Name0 FROM `users` WHERE `Type` = "
+					+ Constants.TypesOfUsers.COURIER + "";
 			rs = SQL.doSQL(query, connect);
 			while (rs.next()) {
 				couriers.add(rs.getString("Name0"));
@@ -265,7 +284,7 @@ public class Call extends Main_Center_Panel {
 		lblTrainer.setFont(Constants.GENERAL_LABEL_FONT);
 		cmTrainer.setBounds(cmGym.getX() + 130, y + 30, 115, 26);
 		JLabel lblDate = new JLabel("Дата");
-		lblDate.setBounds(x + 15, y + 70 , 100, 30);
+		lblDate.setBounds(x + 15, y + 70, 100, 30);
 		lblDate.setFont(Constants.GENERAL_LABEL_FONT);
 		DateTimePicker dateTimePicker = new DateTimePicker();
 		dateTimePicker.setFormats(DateFormat
@@ -273,25 +292,29 @@ public class Call extends Main_Center_Panel {
 		dateTimePicker
 				.setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
 		dateTimePicker.setDate(Calendar.getInstance().getTime());
-		dateTimePicker.setBounds(x + 15,lblDate.getY() +  30, 215, 26);
+		dateTimePicker.setBounds(x + 15, lblDate.getY() + 30, 215, 26);
 		JLabel lblAddress = new JLabel("Адресс");
 		lblAddress.setFont(Constants.GENERAL_LABEL_FONT);
-		lblAddress.setBounds(lblGym.getX() + 265 , y, 100, 30);
+		lblAddress.setBounds(lblGym.getX() + 265, y, 100, 30);
 		JTextField txtAddress = new JTextField();
-		txtAddress.setBounds(cmGym.getX() + 265, y+30, 115, 26);
+		txtAddress.setBounds(cmGym.getX() + 265, y + 30, 115, 26);
 		JLabel lblCourier = new JLabel("Курьер");
 		lblCourier.setFont(Constants.GENERAL_LABEL_FONT);
 		lblCourier.setBounds(lblTrainer.getX() + 265, y, 115, 26);
 		JComboBox cmCourier = new JComboBox<>(couriers.toArray());
-		cmCourier.setBounds(cmTrainer.getX() + 265, y+30, 115, 26);
+		cmCourier.setBounds(cmTrainer.getX() + 265, y + 30, 115, 26);
 		JLabel lblDateDelivery = new JLabel("Доставка");
 		lblDateDelivery.setFont(Constants.GENERAL_LABEL_FONT);
-		lblDateDelivery.setBounds(lblDate.getX() + 265, y+70, 100, 30);
+		lblDateDelivery.setBounds(lblDate.getX() + 265, y + 70, 100, 30);
 		DateTimePicker dateTimePickerCourier = new DateTimePicker();
+
+		dateTimePickerCourier.setFormats(DateFormat
+				.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM));
 		dateTimePickerCourier
-				.setFormats(DateFormat.getDateInstance(DateFormat.DATE_FIELD));
+				.setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
 		dateTimePickerCourier.setDate(Calendar.getInstance().getTime());
-		dateTimePickerCourier.setBounds(dateTimePicker.getX() + 265, y + 100, 215, 26);
+		dateTimePickerCourier.setBounds(dateTimePicker.getX() + 265, y + 100,
+				215, 26);
 		btnOk.setBounds(262, 150, 75, 30);
 		btnOk.addActionListener(new ActionListener() {
 			@Override
@@ -299,7 +322,7 @@ public class Call extends Main_Center_Panel {
 				new Thread() {
 					public void run() {
 						frameAddTrainer.setVisible(false);
-						int id = Common.currectCient.getId();
+						int id = Common.currectNumber.getId();
 						Connection connect = null;
 						try {
 							connect = DriverManager.getConnection(URL,
@@ -310,45 +333,66 @@ public class Call extends Main_Center_Panel {
 							System.out.println(e.getMessage());
 						}
 						String query = "";
-						if(frameAddTrainer.getWidth() == 300) //Только пробную добавляем
+						/*if (frameAddTrainer.getWidth() == 300) // Только пробную
+																// добавляем
 						{
-							query = "UPDATE `"+Constants.NamesOfTables.NUMBERS+"` SET `Gym` = '"
-									+ cmGym.getSelectedItem() + "', `Trainer` = '"
+							query = "UPDATE `" + Constants.NamesOfTables.NUMBERS
+									+ "` SET `Gym` = '"
+									+ cmGym.getSelectedItem()
+									+ "', `Trainer` = '"
 									+ cmTrainer.getSelectedItem()
-									+ "', `Status` = "+Constants.TypesOfClient.TRIAL+" WHERE `id` = " + id;
+									+ "', `Status` = "
+									+ Constants.TypesOfClient.TRIAL
+									+ " WHERE `id` = " + id;
 							SQL.doSQLWithoutResult(query, connect);
-							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
+							query = "INSERT INTO `"
+									+ Constants.NamesOfTables.DATES
+									+ "` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
 									+ id + ", '" + cmTrainer.getSelectedItem()
-									+ "','"+Constants.TypesOfDates.TRIAL+"', '"
-									+ Common.getDateTime(dateTimePicker.getDate())
+									+ "','" + Constants.TypesOfDates.TRIAL
+									+ "', '" + Common.getDateTime(
+											dateTimePicker.getDate())
 									+ "', 0)";
 							SQL.doSQLWithoutResult(query, connect);
-						}
-						else //добавляем и пробную и доставку
-						{
-							query = "UPDATE `"+Constants.NamesOfTables.NUMBERS+"` SET `Gym` = '"
-									+ cmGym.getSelectedItem() + "', `Trainer` = '"
+						}*/ 
+						
+						
+						
+						// добавляем и пробную и доставку
+
+
+						Functions.setDateState(connect, Common.currectNumber.getLastDateId(), Constants.StatesOfDates.SUCCESSFUL);
+							query = "UPDATE `" + Constants.NamesOfTables.NUMBERS
+									+ "` SET `Gym` = '"
+									+ cmGym.getSelectedItem()
+									+ "', `Trainer` = '"
 									+ cmTrainer.getSelectedItem()
-									+ "', `Status` = "+Constants.TypesOfClient.TRIAL+", `Address`='"
-									+ txtAddress.getText() + "', `Courier` = '"
+									+ "', `Status` = "
+									+ Constants.TypesOfClient.DELIVERY_AND_TRIAL
+									+ ", `Address`='" + txtAddress.getText()
+									+ "', `Courier` = '"
 									+ cmCourier.getSelectedItem()
 									+ "' WHERE `id` = " + id;
 							SQL.doSQLWithoutResult(query, connect);
-							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
+							query = "INSERT INTO `"
+									+ Constants.NamesOfTables.DATES
+									+ "` (`Client_id`, `Trainer`, `Type`, `Date`, `State`) VALUES ("
 									+ id + ", '" + cmTrainer.getSelectedItem()
-									+ "','"+Constants.TypesOfDates.TRIAL+"', '"
-									+ Common.getDateTime(dateTimePicker.getDate())
+									+ "','" + Constants.TypesOfDates.TRIAL
+									+ "', '" + Common.getDateTime(
+											dateTimePicker.getDate())
 									+ "', 0)";
 							SQL.doSQLWithoutResult(query, connect);
-							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Courier`, `Type`, `Date`, `State`) VALUES ("
+							query = "INSERT INTO `"
+									+ Constants.NamesOfTables.DATES
+									+ "` (`Client_id`, `Courier`, `Type`, `Date`, `State`) VALUES ("
 									+ id + ", '" + cmCourier.getSelectedItem()
-									+ "','"+Constants.TypesOfDates.DELIVERY+"', '"
+									+ "','" + Constants.TypesOfDates.DELIVERY
+									+ "', '"
 									+ Common.getDateTime(
 											dateTimePickerCourier.getDate())
 									+ "', 0)";
 							SQL.doSQLWithoutResult(query, connect);
-						}
-						
 						SQL.closeConnect(connect);
 						clearSelection();
 						refreshTable();
@@ -373,8 +417,7 @@ public class Call extends Main_Center_Panel {
 		panelAddTrainer.add(dateTimePickerCourier);
 		frameAddTrainer.add(panelAddTrainer);
 	}
-	private void initAddDelivery()
-	{
+	private void initAddDelivery() {
 		frameAddDelivery.setSize(300, 240);
 		panelAddDelivery.setLayout(null);
 		length = 0;
@@ -384,7 +427,8 @@ public class Call extends Main_Center_Panel {
 			connect = DriverManager.getConnection(URL, main.Constants.connInfo);
 			String query;
 			ResultSet rs;
-			query = "SELECT Name0 FROM `users` WHERE `Type` = "+Constants.TypesOfUsers.COURIER+"";
+			query = "SELECT Name0 FROM `users` WHERE `Type` = "
+					+ Constants.TypesOfUsers.COURIER + "";
 			rs = SQL.doSQL(query, connect);
 			while (rs.next()) {
 				couriers.add(rs.getString("Name0"));
@@ -395,22 +439,26 @@ public class Call extends Main_Center_Panel {
 		}
 		JLabel lblAddress = new JLabel("Адресс");
 		lblAddress.setFont(Constants.GENERAL_LABEL_FONT);
-		lblAddress.setBounds(x , y, 100, 30);
+		lblAddress.setBounds(x, y, 100, 30);
 		JTextField txtAddress = new JTextField();
-		txtAddress.setBounds(x, y+30, 115, 26);
+		txtAddress.setBounds(x, y + 30, 115, 26);
 		JLabel lblCourier = new JLabel("Курьер");
 		lblCourier.setFont(Constants.GENERAL_LABEL_FONT);
 		lblCourier.setBounds(x + 130, y, 115, 26);
 		JComboBox cmCourier = new JComboBox<>(couriers.toArray());
-		cmCourier.setBounds(lblCourier.getX(), y+30, 115, 26);
+		cmCourier.setBounds(lblCourier.getX(), y + 30, 115, 26);
 		JLabel lblDateDelivery = new JLabel("Доставка");
 		lblDateDelivery.setFont(Constants.GENERAL_LABEL_FONT);
-		lblDateDelivery.setBounds(x + 15, y+70, 100, 30);
+		lblDateDelivery.setBounds(x + 15, y + 70, 100, 30);
 		DateTimePicker dateTimePickerCourier = new DateTimePicker();
+
+		dateTimePickerCourier.setFormats(DateFormat
+				.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM));
 		dateTimePickerCourier
-				.setFormats(DateFormat.getDateInstance(DateFormat.DATE_FIELD));
+				.setTimeFormat(DateFormat.getTimeInstance(DateFormat.MEDIUM));
 		dateTimePickerCourier.setDate(Calendar.getInstance().getTime());
-		dateTimePickerCourier.setBounds(lblDateDelivery.getX(), y + 100, 215, 26);
+		dateTimePickerCourier.setBounds(lblDateDelivery.getX(), y + 100, 215,
+				26);
 		JButton btnOk = new JButton("ОК");
 		btnOk.setBounds(113, 150, 75, 30);
 		btnOk.addActionListener(new ActionListener() {
@@ -419,7 +467,7 @@ public class Call extends Main_Center_Panel {
 				new Thread() {
 					public void run() {
 						frameAddTrainer.setVisible(false);
-						int id = Common.currectCient.getId();
+						int id = Common.currectNumber.getId();
 						Connection connect = null;
 						try {
 							connect = DriverManager.getConnection(URL,
@@ -429,19 +477,27 @@ public class Call extends Main_Center_Panel {
 									.println("Проблема БД. Call.java, Тренер");
 							System.out.println(e.getMessage());
 						}
-						String query = "";
-							query = "UPDATE `"+Constants.NamesOfTables.NUMBERS+"` SET `Status` = "+Constants.TypesOfClient.DELIVERY+", `Address`='"
-									+ txtAddress.getText() + "', `Courier` = '"
-									+ cmCourier.getSelectedItem()
-									+ "' WHERE `id` = " + id;
-							SQL.doSQLWithoutResult(query, connect);
-							query = "INSERT INTO `"+Constants.NamesOfTables.DATES+"` (`Client_id`, `Courier`, `Type`, `Date`, `State`) VALUES ("
-									+ id + ", '" + cmCourier.getSelectedItem()
-									+ "','"+Constants.TypesOfDates.DELIVERY+"', '"
-									+ Common.getDateTime(
-											dateTimePickerCourier.getDate())
-									+ "', 0)";
-							SQL.doSQLWithoutResult(query, connect);
+						String query;
+
+						Functions.setDateState(connect, Common.currectNumber.getLastDateId(), Constants.StatesOfDates.SUCCESSFUL);
+						query = "UPDATE `" + Constants.NamesOfTables.NUMBERS
+								+ "` SET `Status` = "
+								+ Constants.TypesOfClient.DELIVERY
+								+ ", `Address`='" + txtAddress.getText()
+								+ "', `Courier` = '"
+								+ cmCourier.getSelectedItem()
+								+ "' WHERE `id` = " + id;
+						SQL.doSQLWithoutResult(query, connect);
+						
+						query = "INSERT INTO `" + Constants.NamesOfTables.DATES
+								+ "` (`Client_id`, `Courier`, `Type`, `Date`, `State`) VALUES ("
+								+ id + ", '" + cmCourier.getSelectedItem()
+								+ "','" + Constants.TypesOfDates.DELIVERY
+								+ "', '"
+								+ Common.getDateTime(
+										dateTimePickerCourier.getDate())
+								+ "', 0)";
+						SQL.doSQLWithoutResult(query, connect);
 						SQL.closeConnect(connect);
 						clearSelection();
 						refreshTable();
@@ -461,29 +517,26 @@ public class Call extends Main_Center_Panel {
 		panelAddDelivery.add(dateTimePickerCourier);
 		frameAddDelivery.add(panelAddDelivery);
 	}
-public void initComponents() {
+	public void initComponents() {
 		initAddCall();
 		initAddTrainer();
 		initNextCall();
 		initAddDelivery();
 	}
 	public void nextCall(int x, int y) {
-		if (Common.currectCient.getNumberDates() + 1 > 2
+		if (Common.currectNumber.getNumberDates() + 1 > 2
 				&& JOptionPane.showConfirmDialog(null,
 						"Уже было три и более звонков, добавить этого лиента в слив?") == 0) {
 			if (Common.schedulePanel.isEnabled())
-				Common.Sink(Common.currectCient, Common.schedulePanel);
+				Common.Sink(Common.currectNumber, Common.schedulePanel);
 			else
-				Common.Sink(Common.currectCient, Call.this);
+				Common.Sink(Common.currectNumber, Call.this);
 		} else {
 			frameNextCall.setVisible(true);
 			frameNextCall.setLocation(x, y);
 		}
 	}
-	
-	public void addDelivery()
-	{
-
+	public void addDelivery() {
 		frameAddDelivery.setVisible(true);
 	}
 	public void addTrainerAndDelivery() {
@@ -491,6 +544,7 @@ public void initComponents() {
 		btnOk.setLocation(262, 150);
 		frameAddTrainer.setVisible(true);
 	}
+	// ДЛЯ ДОБАВАВЛЕНИЯ ТОЛЬКО ПРОБНОЙ
 	public void addTrainer() {
 		frameAddTrainer.setSize(300, 240);
 		btnOk.setLocation(113, 150);
@@ -503,8 +557,8 @@ public void initComponents() {
 		try {
 			connect1 = DriverManager.getConnection(URL, Constants.connInfo);
 			connect2 = DriverManager.getConnection(URL, Constants.connInfo);
-			queryClients = "SELECT * FROM "+Constants.NamesOfTables.NUMBERS+" WHERE `Call`='"
-					+ User.CurrentUser0 + "'";
+			queryClients = "SELECT * FROM " + Constants.NamesOfTables.NUMBERS
+					+ " WHERE `Call`='" + User.CurrentUser0 + "'";
 			ResultSet rsClients = SQL.doSQL(queryClients, connect1);
 			rsClients.last();
 			int count = rsClients.getRow();
@@ -529,12 +583,14 @@ public void initComponents() {
 					clients.get(i).setAddress(rsClients.getString("Address"));
 					clients.get(i).setComment(rsClients.getString("Comment"));
 					clients.get(i).setStatus(rsClients.getInt("Status"));
-					queryDates = "SELECT * FROM `"+Constants.NamesOfTables.DATES+"` WHERE `Client_id`="
-							+ rsClients.getInt("id") + "  ORDER BY `Date`";
+					queryDates = "SELECT * FROM `"
+							+ Constants.NamesOfTables.DATES
+							+ "` WHERE `Client_id`=" + rsClients.getInt("id")
+							+ "  ORDER BY `Date`";
 					rsDates = SQL.doSQL(queryDates, connect2);
 					if (rsDates.last()) {
 						clients.get(i).setNumberDates(rsDates.getInt("Number"));
-						clients.get(i).setLastDate(rsDates.getString("Date"));
+						clients.get(i).setLastDate(rsDates.getString("Date"), rsDates.getInt("id"));
 					}
 					i++;
 				} while (rsClients.next());
@@ -548,8 +604,10 @@ public void initComponents() {
 					if (clients.get(i).getStatus() == 10)
 						break;
 					Vector<String> newRow = new Vector<String>();
-					if (clients.get(i).getStatus() == 1
-							|| clients.get(i).getStatus() == 2)
+
+					newRow.add("" + (i + 1));
+					if (clients.get(i)
+							.getStatus() == Constants.TypesOfClient.CALL)
 						newRow.add(
 								clients.get(i).getLastDate().substring(0, 10));
 					else
@@ -565,7 +623,8 @@ public void initComponents() {
 					newRow.add(clients.get(i).getAddress());
 					newRow.add(clients.get(i).getComment());
 					newRow.add(Functions.getStatus(clients.get(i).getStatus()));
-					if (clients.get(i).getStatus() == Constants.TypesOfClient.CALL)
+					if (clients.get(i)
+							.getStatus() == Constants.TypesOfClient.CALL)
 						newRow.add((1 + clients.get(i).getNumberDates()) + "");
 					else
 						newRow.add("");
@@ -592,6 +651,7 @@ public void initComponents() {
 			}
 		}.start();
 		headerVect.clear();
+		headerVect.add("Номер");
 		headerVect.add("Дата звонка");
 		headerVect.add("Доставщик");
 		headerVect.add("Тренер");
@@ -607,13 +667,10 @@ public void initComponents() {
 		headerVect.add("Номер звонка");
 		revalidate(headerVect);
 		JMenuItem itemTrainerAndDelivery = new JMenuItem("Доставка пробной");
-		Common.leftPanelCall.popup
-				.add(itemTrainerAndDelivery);
+		Common.leftPanelCall.popup.add(itemTrainerAndDelivery);
 		JMenuItem itemDelivery = new JMenuItem("Доставка");
 		Common.leftPanelCall.popup.add(itemDelivery);
-		JMenuItem itemTrainer = new JMenuItem("Пробная");
-		Common.leftPanelCall.popup.add(itemTrainer);
-		JMenuItem itemCall = new JMenuItem("Звонок");
+		JMenuItem itemCall = new JMenuItem("Перенос");
 		Common.leftPanelCall.popup.add(itemCall);
 		JMenuItem itemSink = new JMenuItem("Слив");
 		Common.leftPanelCall.popup.add(itemSink);
@@ -651,24 +708,13 @@ public void initComponents() {
 				}
 			}
 		});
-		itemTrainer.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				addTrainer();
-				if (Common.schedulePanel.isEnable()) {
-					Common.schedulePanel.table.clearSelection();
-				} else {
-					table.clearSelection();
-				}
-			}
-		});
 		itemSink.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (Common.schedulePanel.isEnabled())
-					Common.Sink(Common.currectCient, Common.schedulePanel);
+					Common.Sink(Common.currectNumber, Common.schedulePanel);
 				else
-					Common.Sink(Common.currectCient, Call.this);
+					Common.Sink(Common.currectNumber, Call.this);
 			}
 		});
 		table.addMouseListener(new MouseListener() {
@@ -684,29 +730,17 @@ public void initComponents() {
 					table.setColumnSelectionInterval(column, column);
 					table.setRowSelectionInterval(row, row);
 					Point p = scrollPane.getMousePosition();
-					Common.currectCient = clients.get(table.getSelectedRow());
-					if (Common.currectCient.getStatus() == Constants.TypesOfClient.CALL)
-					{
-						Common.leftPanelCall.popup.getComponent(0).setVisible(true);   //Доставка пробной
-						Common.leftPanelCall.popup.getComponent(1).setVisible(true);   //Доставка 
-						Common.leftPanelCall.popup.getComponent(2).setVisible(false);  //Пробная
-						Common.leftPanelCall.popup.show(
-								Call.this, (int) p.getX() + 1,
-								(int) p.getY() + 1);
-					}
-					else if (Common.currectCient.getStatus() == Constants.TypesOfClient.SUCCESSFUL_DELIVERY)
-					{	
-						Common.leftPanelCall.popup.getComponent(0).setVisible(false);   //Доставка пробной
-						Common.leftPanelCall.popup.getComponent(1).setVisible(false);   //Доставка 
-						Common.leftPanelCall.popup.getComponent(2).setVisible(true);  //Пробная
-						Common.leftPanelCall.popup.show(
-								Call.this, (int) p.getX() + 1,
-								(int) p.getY() + 1);
+					Common.currectNumber = clients.get(table.getSelectedRow());
+					if (Common.currectNumber
+							.getStatus() == Constants.TypesOfClient.CALL) {
+						Common.leftPanelCall.popup.show(Call.this,
+								(int) p.getX() + 1, (int) p.getY() + 1);
 					}
 				}
 				if (e.getClickCount() >= 2 && e.getClickCount() % 2 == 0) {
-					Common.currectCient = clients.get(table.getSelectedRow());
-					if (Common.currectCient.getStatus() == Constants.TypesOfClient.CALL)
+					Common.currectNumber = clients.get(table.getSelectedRow());
+					if (Common.currectNumber
+							.getStatus() == Constants.TypesOfClient.CALL)
 						nextCall((int) (scrollPane.getMousePosition().getX()),
 								(int) (scrollPane.getMousePosition().getY()));
 				}

@@ -49,6 +49,18 @@ public class Schedule extends Main_Center_Panel {
 	public ArrayList<Client> getClients() {
 		return clients;
 	}
+	public boolean CheckToday()
+	{
+		if ((dayScheldule.get(Calendar.DAY_OF_MONTH) == Calendar.getInstance()
+				.get(Calendar.DAY_OF_MONTH))
+				&& (dayScheldule.get(Calendar.MONTH) == Calendar.getInstance()
+						.get(Calendar.MONTH))
+				&& (dayScheldule.get(Calendar.YEAR) == Calendar.getInstance()
+						.get(Calendar.YEAR)))
+		return true;
+		else
+			return false;
+	}
 	public void refreshTable() {
 		int column = table.getSelectedColumn(), row = table.getSelectedRow();
 		mod.getDataVector().clear();
@@ -57,23 +69,28 @@ public class Schedule extends Main_Center_Panel {
 			connect1 = DriverManager.getConnection(URL, connInfo);
 			connect2 = DriverManager.getConnection(URL, connInfo);
 			String query = "";
-			switch (User.Type) {
+			switch (User.CurrentType) {
 				case Constants.TypesOfUsers.CALL :
-					query = "SELECT * FROM `clients` WHERE `Call`='"
-							+ User.CurrentUser0 + "' AND (`Status`="
-							+ Constants.TypesOfClient.CALL + " OR `Status` = "
-							+ TypesOfClient.SUCCESSFUL_DELIVERY + ")";
+					query = "SELECT * FROM `" + Constants.NamesOfTables.NUMBERS
+							+ "` WHERE `Call`='" + User.CurrentUser0
+							+ "' AND `Status`=" + Constants.TypesOfClient.CALL;
 					break;
 				case Constants.TypesOfUsers.TRAINER :
-					query = "SELECT * FROM `clients` WHERE `Trainer`='"
-							+ User.CurrentUser0 + "' AND (`Status`= "
-							+ Constants.TypesOfClient.TRIAL + " OR `Status` = "
-							+ Constants.TypesOfClient.PAY + " OR `Status` = "
-							+ Constants.TypesOfClient.CLIENT + ")";
+					query = "SELECT * FROM `" + Constants.NamesOfTables.NUMBERS
+							+ "` WHERE `Trainer`='" + User.CurrentUser0
+							+ "' AND (`Status`= "
+							+ Constants.TypesOfClient.TRIAL_PASS
+							+ " OR `Status`= "
+							+ Constants.TypesOfClient.TRIAL_TRIAL
+							+ " OR `Status`= "
+							+ Constants.TypesOfClient.TRIAL_NOTHING
+							+ " OR `Status` = " + Constants.TypesOfClient.PAY
+							+ " OR `Status` = " + Constants.TypesOfClient.CLIENT
+							+ ")";
 					break;
 				case Constants.TypesOfUsers.COURIER :
-					query = "SELECT * FROM `clients` WHERE `Courier`='"
-							+ User.CurrentUser0 + "'";
+					query = "SELECT * FROM `" + Constants.NamesOfTables.NUMBERS
+							+ "` WHERE `Courier`='" + User.CurrentUser0 + "' ";
 					break;
 			}
 			ResultSet rsClients = SQL.doSQL(query, connect1);
@@ -81,14 +98,21 @@ public class Schedule extends Main_Center_Panel {
 			if (rsClients.first())
 				do {
 					String queryDates;
-					switch (User.Type) {
+					switch (User.CurrentType) {
 						case Constants.TypesOfUsers.COURIER :
-							queryDates = "SELECT * FROM `"+Constants.NamesOfTables.DATES+"` WHERE `Client_id`="
-									+ rsClients.getInt("id")
-									+ " AND `Type` = "+Constants.TypesOfDates.DELIVERY+"  ORDER BY `Date`";
+							queryDates = "SELECT * FROM `"
+									+ Constants.NamesOfTables.DATES
+									+ "` WHERE `Client_id`="
+									+ rsClients.getInt("id") + " AND `Type` = "
+									+ Constants.TypesOfDates.DELIVERY
+									+ " AND `State` = "
+									+ Constants.StatesOfDates.WAIT
+									+ "  ORDER BY `Date`";
 							break;
 						default :
-							queryDates = "SELECT * FROM `"+Constants.NamesOfTables.DATES+"` WHERE `Client_id`="
+							queryDates = "SELECT * FROM `"
+									+ Constants.NamesOfTables.DATES
+									+ "` WHERE `Client_id`="
 									+ rsClients.getInt("id")
 									+ " ORDER BY `Date`";
 							break;
@@ -100,7 +124,8 @@ public class Schedule extends Main_Center_Panel {
 						if (datesString1.equals(
 								Common.getDateBase(dayScheldule.getTime()))) {
 							Client cl = new Client();
-							cl.setLastDate(Common.getTime(dateString0));
+							cl.setLastDate(Common.getTime(dateString0),
+									rsDates.getInt("id"));
 							cl.setId(rsClients.getInt("id"));
 							cl.setTrainer(rsClients.getString("Trainer"));
 							cl.setGym(rsClients.getString("Gym"));
@@ -115,6 +140,10 @@ public class Schedule extends Main_Center_Panel {
 							cl.setStatus(rsClients.getInt("Status"));
 							cl.setNumberDates(rsDates.getInt("Number"));
 							cl.setLastDateId(rsDates.getInt("id"));
+							cl.setClient(rsClients.getBoolean("IsClient"));
+							if (cl.isClient()) {
+								Functions.getClientInf(cl);
+							}
 							clients.add(cl);
 							i++;
 						}
@@ -128,18 +157,20 @@ public class Schedule extends Main_Center_Panel {
 				Collections.sort(clients);
 				for (i = 0; i < clients.size(); i++) {
 					Vector<String> newRow = new Vector<String>();
-					newRow.add(clients.get(i).getAccountSpam());
-					newRow.add(clients.get(i).getName());
-					newRow.add(clients.get(i).getNumber());
-					newRow.add(clients.get(i).getAccountClient());
-					if (User.Type == Constants.TypesOfUsers.TRAINER) {
+					if (Functions.isTimeuser(User.CurrentType)) {
 						newRow.add(clients.get(i).getLastDate());
 					}
-					if (User.Type == Constants.TypesOfUsers.COURIER) {
+					newRow.add(Functions.getStatus(clients.get(i).getStatus()));
+					newRow.add(clients.get(i).getName());
+					newRow.add(clients.get(i).getNumber());
+					if (User.CurrentType == Constants.TypesOfUsers.TRAINER) {
+						newRow.add(clients.get(i).getNumberTrain() + "/"
+								+ clients.get(i).getCountOfTrain());
+					}
+					if (User.CurrentType == Constants.TypesOfUsers.COURIER) {
 						newRow.add(clients.get(i).getAddress());
 					}
 					newRow.add(clients.get(i).getComment());
-					newRow.add(Functions.getStatus(clients.get(i).getStatus()));
 					mod.addRow(newRow);
 				}
 			}
@@ -148,7 +179,7 @@ public class Schedule extends Main_Center_Panel {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
-		if (column > -1 && row > -1) {
+		if (column > -1 && row > -1 && row <= table.getRowCount()) {
 			table.setColumnSelectionInterval(column, column);
 			table.setRowSelectionInterval(row, row);
 		}
@@ -166,23 +197,6 @@ public class Schedule extends Main_Center_Panel {
 			lblDay.setText(Common.getDate(dayScheldule.getTime()));
 	}
 	public Schedule() {
-		{
-			try {
-				connect1 = DriverManager.getConnection(URL, connInfo);
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-			}
-			ResultSet rs = SQL.doSQL(
-					"SELECT * FROM `"+Constants.NamesOfTables.DATES+"` WHERE `Courier`='Александр' AND `Type` = "+Constants.TypesOfDates.SUCCESSFUL_DELIVERY,
-					connect1);
-			int i = 0;
-			try {
-				while (rs.next())
-					i++;// считаем кол-во удачных доставок
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-			}
-		}
 		headerPanel.setLayout(new BorderLayout());
 		JButton btnBackDay = new JButton("Назад");
 		JLabel lblDay = new JLabel("Сегодня");
@@ -222,20 +236,21 @@ public class Schedule extends Main_Center_Panel {
 		headerPanel.add(btnNextDay, BorderLayout.LINE_END);
 		add(headerPanel, BorderLayout.NORTH);
 		headerVect.clear();
-		headerVect.add("Вк Аккаунта");
-		headerVect.add("Имя");
-		headerVect.add("Номер");
-		headerVect.add("Вк клиента");
-		if (User.Type == Constants.TypesOfUsers.TRAINER) {
+		if (Functions.isTimeuser(User.CurrentType)) {
 			headerVect.add("Время");
 		}
-		if (User.Type == Constants.TypesOfUsers.COURIER) {
+		headerVect.add("Статус");
+		headerVect.add("Имя");
+		headerVect.add("Номер");
+		if (User.CurrentType == Constants.TypesOfUsers.TRAINER) {
+			headerVect.add("Номер тренирвоки");
+		}
+		if (User.CurrentType == Constants.TypesOfUsers.COURIER) {
 			headerVect.add("Адресс");
 		}
 		headerVect.add("Комментарий");
-		headerVect.add("Статус");
 		revalidate(headerVect);
-		switch (User.Type) {
+		switch (User.CurrentType) {
 			case Constants.TypesOfUsers.CALL :
 				table.addMouseListener(new MouseListener() {
 					@Override
@@ -243,49 +258,36 @@ public class Schedule extends Main_Center_Panel {
 					}
 					@Override
 					public void mousePressed(MouseEvent e) {
-						if (e.getButton() == MouseEvent.BUTTON3) {
-							Point point = e.getPoint();
-							int column = table.columnAtPoint(point);
-							int row = table.rowAtPoint(point);
-							table.setColumnSelectionInterval(column, column);
-							table.setRowSelectionInterval(row, row);
-							Point p = scrollPane.getMousePosition();
-							Common.currectCient = clients
-									.get(table.getSelectedRow());
-							if (Common.currectCient.getStatus() == Constants.TypesOfClient.CALL) {
-								Common.leftPanelCall.popup.getComponent(0)
-										.setVisible(true); // Доставка пробной
-								Common.leftPanelCall.popup.getComponent(1)
-										.setVisible(true); // Доставка
-								Common.leftPanelCall.popup.getComponent(2)
-										.setVisible(false); // Пробная
+						if(CheckToday())
+						{
+							if (e.getButton() == MouseEvent.BUTTON3) {
+								Point point = e.getPoint();
+								int column = table.columnAtPoint(point);
+								int row = table.rowAtPoint(point);
+								table.setColumnSelectionInterval(column, column);
+								table.setRowSelectionInterval(row, row);
+								Point p = scrollPane.getMousePosition();
+								Common.currectNumber = clients
+										.get(table.getSelectedRow());
 								Common.leftPanelCall.popup.show(Schedule.this,
-										(int) p.getX() + 1, (int) p.getY() + 1);
-							} else if (Common.currectCient.getStatus() == Constants.TypesOfClient.SUCCESSFUL_DELIVERY) {
-								Common.leftPanelCall.popup.getComponent(0)
-										.setVisible(false); // Доставка пробной
-								Common.leftPanelCall.popup.getComponent(1)
-										.setVisible(false); // Доставка
-								Common.leftPanelCall.popup.getComponent(2)
-										.setVisible(true); // Пробная
-								Common.leftPanelCall.popup.show(Schedule.this,
-										(int) p.getX() + 1, (int) p.getY() + 1);
+										(int) p.getX() + 1, (int) p.getY() +(int) headerPanel
+										.getPreferredSize()
+										.getHeight());
 							}
-						}
-						if (e.getClickCount() >= 2
-								&& e.getClickCount() % 2 == 0) {
-							Common.currectCient = clients
-									.get(table.getSelectedRow());
-							if (Common.currectCient.getStatus() == Constants.TypesOfDates.CALL)
+							if (e.getClickCount() >= 2
+									&& e.getClickCount() % 2 == 0) {
+								Common.currectNumber = clients
+										.get(table.getSelectedRow());
 								Common.callPanel.nextCall(
 										(int) (scrollPane.getMousePosition()
 												.getX()),
-										(int) (scrollPane.getMousePosition()
-												.getY())
+										(int) (scrollPane.getMousePosition().getY())
 												+ (int) headerPanel
 														.getPreferredSize()
 														.getHeight());
+							}
 						}
+						
 					}
 					@Override
 					public void mouseExited(MouseEvent arg0) {
@@ -305,14 +307,14 @@ public class Schedule extends Main_Center_Panel {
 					}
 					@Override
 					public void mousePressed(MouseEvent e) {
-						if (e.getButton() == MouseEvent.BUTTON3) {
+						if (CheckToday() && e.getButton() == MouseEvent.BUTTON3) {
 							Point point = e.getPoint();
 							int column = table.columnAtPoint(point);
 							int row = table.rowAtPoint(point);
 							table.setColumnSelectionInterval(column, column);
 							table.setRowSelectionInterval(row, row);
 							Point p = scrollPane.getMousePosition();
-							Common.currectCient = clients
+							Common.currectNumber = clients
 									.get(table.getSelectedRow());
 							Common.leftPanelCourier.popup.show(Schedule.this,
 									(int) p.getX() + 1,
